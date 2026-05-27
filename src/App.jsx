@@ -90,6 +90,29 @@ export default function App() {
     ])
   }
 
+  async function undoBet(bet) {
+    const winner = players.find(p => p.id === bet.winnerId)
+    const loserId = bet.winnerId === bet.player1Id ? bet.player2Id : bet.player1Id
+    const loser = players.find(p => p.id === loserId)
+
+    await Promise.all([
+      updateDoc(doc(db, 'players', winner.id), {
+        balance: parseFloat((winner.balance - bet.payout).toFixed(2)),
+        wins: Math.max(0, (winner.wins || 1) - 1)
+      }),
+      updateDoc(doc(db, 'players', loser.id), {
+        balance: parseFloat((loser.balance + bet.payout).toFixed(2)),
+        losses: Math.max(0, (loser.losses || 1) - 1)
+      }),
+      updateDoc(doc(db, 'bets', bet.id), {
+        status: 'active',
+        winnerId: null,
+        payout: null,
+        settledAt: null
+      })
+    ])
+  }
+
   async function addPlayer(name) {
     await addDoc(collection(db, 'players'), {
       name,
@@ -126,7 +149,7 @@ export default function App() {
         {tab === 'leaderboard' && <Leaderboard players={players} avail={avail} />}
         {tab === 'bets' && <ActiveBets bets={activeBets} players={players} settleBet={settleBet} />}
         {tab === 'new' && <NewBet players={players} activeBets={activeBets} createBet={createBet} setTab={setTab} />}
-        {tab === 'history' && <History bets={settledBets} players={players} />}
+        {tab === 'history' && <History bets={settledBets} players={players} undoBet={undoBet} />}
         {tab === 'players' && <Players players={players} addPlayer={addPlayer} />}
       </main>
     </div>
@@ -363,8 +386,18 @@ function NewBet({ players, activeBets, createBet, setTab }) {
 
 // ── History ───────────────────────────────────────────────────────────────────
 
-function History({ bets, players }) {
+function History({ bets, players, undoBet }) {
   const name = (id) => players.find(p => p.id === id)?.name ?? '?'
+  const [confirming, setConfirming] = useState(null)
+
+  function handleUndo(bet) {
+    if (confirming === bet.id) {
+      undoBet(bet)
+      setConfirming(null)
+    } else {
+      setConfirming(bet.id)
+    }
+  }
 
   return (
     <section>
@@ -386,6 +419,14 @@ function History({ bets, players }) {
               <span className="winner">
                 {winnerName} ({winnerTeam}) won {fmt(bet.payout)}
               </span>
+            </div>
+            <div className="bet-actions">
+              <button
+                className={`undo-btn ${confirming === bet.id ? 'confirming' : ''}`}
+                onClick={() => handleUndo(bet)}
+              >
+                {confirming === bet.id ? 'Confirm undo?' : 'Undo'}
+              </button>
             </div>
           </div>
         )

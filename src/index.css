@@ -166,6 +166,23 @@ main { padding-bottom: 48px }
   font-weight: 700;
 }
 
+.undo-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #64748b;
+  color: #64748b;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+}
+
+.undo-btn:hover, .undo-btn.confirming {
+  border-color: #f87171;
+  color: #f87171;
+  font-weight: 700;
+}
+
 /* Form */
 .bet-form { display: flex; flex-direction: column; gap: 18px }
 
