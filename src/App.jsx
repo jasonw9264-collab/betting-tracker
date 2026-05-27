@@ -340,7 +340,10 @@ export default function App() {
   return (
     <div className="app">
       <header>
-        <h1>Bet Tracker</h1>
+        <div className="header-title">
+          <h1>Gamble Gamble</h1>
+          <span className="header-subtitle">valorant edition</span>
+        </div>
         <div className="header-right">
           <div className="header-info">
             <span className="header-username">{session.username}</span>
@@ -355,8 +358,7 @@ export default function App() {
 
       <nav className="nav-primary">
         {[
-          ['market', `Market (${openListings.length})`],
-          ['new', '+ New Bet'],
+          ['market', `Market`],
           ['bets', `Active (${activeBets.length})`],
         ].map(([key, label]) => (
           <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
@@ -380,6 +382,7 @@ export default function App() {
           <Market
             listings={openListings} players={players}
             currentPlayer={currentPlayer} activeBets={activeBets}
+            games={games} publishListing={publishListing}
             takeListing={takeListing} cancelListing={cancelListing}
             editListingStake={editListingStake} sessionId={session.playerId}
           />
@@ -418,8 +421,9 @@ export default function App() {
 
 // ── Market ────────────────────────────────────────────────────────────────────
 
-function Market({ listings, players, currentPlayer, activeBets, takeListing, cancelListing, editListingStake, sessionId }) {
+function Market({ listings, players, currentPlayer, activeBets, games, publishListing, takeListing, cancelListing, editListingStake, sessionId }) {
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
+  const [subView, setSubView] = useState('listings')
   const [takerStakes, setTakerStakes] = useState({})
   const [editingStake, setEditingStake] = useState(null)
   const [editStakeVal, setEditStakeVal] = useState('')
@@ -447,10 +451,24 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
 
   if (!currentPlayer) return <section><h2>Market</h2><p className="empty">Loading...</p></section>
 
+  if (subView === 'new') {
+    return (
+      <NewBet
+        games={games} currentPlayer={currentPlayer}
+        activeBets={activeBets} publishListing={publishListing}
+        setTab={() => setSubView('listings')}
+        backLabel="← Back to Market"
+      />
+    )
+  }
+
   return (
     <section>
-      <h2>Market</h2>
-      {listings.length === 0 && <p className="empty">No open bets. Go to + New Bet to post one.</p>}
+      <div className="market-header">
+        <h2>Market {listings.length > 0 && <span className="count-badge">{listings.length}</span>}</h2>
+        <button className="new-bet-btn" onClick={() => setSubView('new')}>+ New Bet</button>
+      </div>
+      {listings.length === 0 && <p className="empty">No open bets yet — be the first to post one.</p>}
       {listings.map(listing => {
         const isOwn = listing.publisherId === sessionId
         const publisherTeam = listing.publisherSide === 1 ? listing.team1 : listing.team2
@@ -532,7 +550,7 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
 
 // ── New Bet ───────────────────────────────────────────────────────────────────
 
-function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
+function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, backLabel }) {
   const [gameId, setGameId] = useState('')
   const [side, setSide] = useState('')
   const [stake, setStake] = useState('')
@@ -578,6 +596,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
 
   return (
     <section>
+      {backLabel && <button className="back-btn" onClick={() => setTab()}>{backLabel}</button>}
       <h2>+ New Bet</h2>
       <form className="bet-form" onSubmit={handleSubmit}>
         <div className="form-group">
@@ -767,6 +786,7 @@ function History({ bets, players, undoBet, isAdmin }) {
 // ── Profile ───────────────────────────────────────────────────────────────────
 
 function Profile({ currentPlayer, session, updateUsername, updatePassword, players }) {
+  const [showDetails, setShowDetails] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -802,40 +822,54 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
         <div className="profile-stats">
           <div className="profile-stat">
             <span className="profile-stat-label">Balance</span>
-            <span className={currentPlayer.balance >= 50 ? 'up' : 'down'}>{fmt(currentPlayer.balance)}</span>
+            <span className={`profile-stat-value ${currentPlayer.balance >= 50 ? 'up' : 'down'}`}>{fmt(currentPlayer.balance)}</span>
           </div>
           <div className="profile-stat">
-            <span className="profile-stat-label">Record</span>
-            <span>{currentPlayer.wins || 0}W / {currentPlayer.losses || 0}L</span>
+            <span className="profile-stat-label">Wins</span>
+            <span className="profile-stat-value up">{currentPlayer.wins || 0}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat-label">Losses</span>
+            <span className="profile-stat-value down">{currentPlayer.losses || 0}</span>
           </div>
         </div>
       )}
-      <div className="profile-section">
-        <h3>Change Username</h3>
-        <form className="bet-form" onSubmit={handleUsernameChange}>
-          <div className="form-group">
-            <label>New Username</label>
-            <input value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder={session.username} required />
+
+      <button className="details-toggle" onClick={() => setShowDetails(v => !v)}>
+        <span>Change Details</span>
+        <span className="toggle-arrow">{showDetails ? '▲' : '▼'}</span>
+      </button>
+
+      {showDetails && (
+        <div className="details-panel">
+          <div className="profile-section">
+            <h3>Change Username</h3>
+            <form className="bet-form" onSubmit={handleUsernameChange}>
+              <div className="form-group">
+                <label>New Username</label>
+                <input value={newUsername} onChange={e => setNewUsername(e.target.value)} placeholder={session.username} required />
+              </div>
+              {usernameMsg && <p className={usernameMsg.includes('!') ? 'success-msg' : 'error'}>{usernameMsg}</p>}
+              <button type="submit" className="submit-btn">Update Username</button>
+            </form>
           </div>
-          {usernameMsg && <p className={usernameMsg.includes('!') ? 'success-msg' : 'error'}>{usernameMsg}</p>}
-          <button type="submit" className="submit-btn">Update Username</button>
-        </form>
-      </div>
-      <div className="profile-section">
-        <h3>Change Password</h3>
-        <form className="bet-form" onSubmit={handlePasswordChange}>
-          <div className="form-group">
-            <label>New Password</label>
-            <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 3 characters" required />
+          <div className="profile-section">
+            <h3>Change Password</h3>
+            <form className="bet-form" onSubmit={handlePasswordChange}>
+              <div className="form-group">
+                <label>New Password</label>
+                <input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 3 characters" required />
+              </div>
+              <div className="form-group">
+                <label>Confirm Password</label>
+                <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" required />
+              </div>
+              {passwordMsg && <p className={passwordMsg.includes('!') ? 'success-msg' : 'error'}>{passwordMsg}</p>}
+              <button type="submit" className="submit-btn">Update Password</button>
+            </form>
           </div>
-          <div className="form-group">
-            <label>Confirm Password</label>
-            <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" required />
-          </div>
-          {passwordMsg && <p className={passwordMsg.includes('!') ? 'success-msg' : 'error'}>{passwordMsg}</p>}
-          <button type="submit" className="submit-btn">Update Password</button>
-        </form>
-      </div>
+        </div>
+      )}
     </section>
   )
 }
