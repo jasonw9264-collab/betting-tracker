@@ -434,3 +434,104 @@ select option { background: #1e293b }
   text-align: center;
   padding: 32px 0;
 }
+
+/* Auth screen */
+.auth-screen {
+  max-width: 380px;
+  margin: 0 auto;
+  padding-top: 16px;
+}
+
+.auth-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.auth-tabs button {
+  flex: 1;
+  padding: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.auth-tabs button.active {
+  background: #4ade80;
+  color: #0f1117;
+  border-color: #4ade80;
+  font-weight: 700;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 16px }
+
+/* Header auth */
+.header-username {
+  font-weight: 700;
+  color: #4ade80;
+  font-size: 0.95rem;
+}
+
+.signout-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #334155;
+  color: #64748b;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+}
+
+.signout-btn:hover { border-color: #f87171; color: #f87171 }
+
+/* Profile */
+.profile-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.profile-stat {
+  flex: 1;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.profile-stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.profile-section {
+  margin-bottom: 28px;
+}
+
+.profile-section h3 {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.success-msg {
+  color: #4ade80;
+  font-size: 0.88rem;
+  background: #0f2a1a;
+  border: 1px solid #4ade80;
+  border-radius: 7px;
+  padding: 9px 13px;
+}
