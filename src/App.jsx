@@ -122,6 +122,10 @@ export default function App() {
     })
   }
 
+  async function updatePlayer(id, fields) {
+    await updateDoc(doc(db, 'players', id), fields)
+  }
+
   return (
     <div className="app">
       <header>
@@ -150,7 +154,7 @@ export default function App() {
         {tab === 'bets' && <ActiveBets bets={activeBets} players={players} settleBet={settleBet} />}
         {tab === 'new' && <NewBet players={players} activeBets={activeBets} createBet={createBet} setTab={setTab} />}
         {tab === 'history' && <History bets={settledBets} players={players} undoBet={undoBet} />}
-        {tab === 'players' && <Players players={players} addPlayer={addPlayer} />}
+        {tab === 'players' && <Players players={players} addPlayer={addPlayer} updatePlayer={updatePlayer} />}
       </main>
     </div>
   )
@@ -437,14 +441,28 @@ function History({ bets, players, undoBet }) {
 
 // ── Players ───────────────────────────────────────────────────────────────────
 
-function Players({ players, addPlayer }) {
+function Players({ players, addPlayer, updatePlayer }) {
   const [name, setName] = useState('')
+  const [editingId, setEditingId] = useState(null)
+  const [editName, setEditName] = useState('')
 
   async function handleAdd(e) {
     e.preventDefault()
     if (!name.trim()) return
     await addPlayer(name.trim())
     setName('')
+  }
+
+  function startEdit(p) {
+    setEditingId(p.id)
+    setEditName(p.name)
+  }
+
+  async function saveEdit(p) {
+    if (editName.trim() && editName.trim() !== p.name) {
+      await updatePlayer(p.id, { name: editName.trim() })
+    }
+    setEditingId(null)
   }
 
   return (
@@ -462,8 +480,25 @@ function Players({ players, addPlayer }) {
       {players.length === 0 && <p className="empty">No players yet.</p>}
       {players.map(p => (
         <div key={p.id} className="player-row">
-          <span className="name">{p.name}</span>
-          <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
+          {editingId === p.id ? (
+            <input
+              className="edit-name-input"
+              value={editName}
+              onChange={e => setEditName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && saveEdit(p)}
+              autoFocus
+            />
+          ) : (
+            <span className="name">{p.name}</span>
+          )}
+          <div className="player-row-right">
+            <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
+            {editingId === p.id ? (
+              <button className="edit-save-btn" onClick={() => saveEdit(p)}>Save</button>
+            ) : (
+              <button className="edit-btn" onClick={() => startEdit(p)}>Edit</button>
+            )}
+          </div>
         </div>
       ))}
     </section>

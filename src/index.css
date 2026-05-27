@@ -301,6 +301,51 @@ select option { background: #1e293b }
   border: 1px solid #334155;
   border-radius: 9px;
   margin-bottom: 8px;
+  gap: 10px;
+}
+
+.player-row-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.edit-name-input {
+  flex: 1;
+  padding: 6px 10px;
+  background: #0f1117;
+  border: 1px solid #4ade80;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+}
+
+.edit-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #334155;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.edit-btn:hover {
+  border-color: #94a3b8;
+  color: #94a3b8;
+}
+
+.edit-save-btn {
+  padding: 5px 12px;
+  background: #4ade80;
+  border: none;
+  color: #0f1117;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
 .empty {
