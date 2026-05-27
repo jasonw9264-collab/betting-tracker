@@ -337,6 +337,15 @@ export default function App() {
     localStorage.setItem('session', JSON.stringify(s))
   }
 
+  async function updatePlayerUsername(playerId, newUsername) {
+    await updateDoc(doc(db, 'players', playerId), { username: newUsername })
+    if (playerId === session.playerId) {
+      const s = { ...session, username: newUsername }
+      setSession(s)
+      localStorage.setItem('session', JSON.stringify(s))
+    }
+  }
+
   async function updatePassword(newPassword) {
     const hash = await hashPassword(newPassword)
     await updateDoc(doc(db, 'players', session.playerId), { passwordHash: hash })
@@ -417,6 +426,7 @@ export default function App() {
             games={games} players={players} bets={activeBets}
             addGame={addGame} removeGame={removeGame} updateGame={updateGame} removePlayer={removePlayer}
             settleBet={settleBet} isAdmin={isAdmin} setIsAdmin={setIsAdmin}
+            updatePlayerUsername={updatePlayerUsername}
           />
         )}
       </main>
@@ -763,15 +773,24 @@ function ActiveBets({ bets, players, settleBet, cancelBet, isAdmin }) {
       {bets.length === 0 && <p className="empty">No active bets.</p>}
       {bets.map(bet => (
         <div key={bet.id} className="bet-card">
-          <div className="bet-header">
-            <span><strong>{bet.team1}</strong><span className="odds-tag">{bet.player1Odds}</span>{name(bet.player1Id)}</span>
-            <span className="vs">vs</span>
-            <span><strong>{bet.team2}</strong><span className="odds-tag">{bet.player2Odds}</span>{name(bet.player2Id)}</span>
-          </div>
-          <div className="bet-info">
-            Stake: {fmt(bet.stake)}
-            &nbsp;·&nbsp;{bet.team1} wins → {name(bet.player1Id)} +{fmt(bet.stake * (bet.player1Odds - 1))}
-            &nbsp;·&nbsp;{bet.team2} wins → {name(bet.player2Id)} +{fmt(bet.stake * (bet.player2Odds - 1))}
+          <div className="bet-versus">
+            <div className="bet-player-side">
+              <span className="bet-player-name">{name(bet.player1Id)}</span>
+              <span className="bet-team">{bet.team1}</span>
+              <span className="bet-potential up">+{fmt(bet.stake * (bet.player1Odds - 1))}</span>
+              <span className="bet-odds-label">odds {bet.player1Odds}</span>
+            </div>
+            <div className="bet-vs-center">
+              <span className="bet-vs-text">VS</span>
+              <span className="bet-stake-label">stake</span>
+              <span className="bet-stake-val">{fmt(bet.stake)}</span>
+            </div>
+            <div className="bet-player-side right">
+              <span className="bet-player-name">{name(bet.player2Id)}</span>
+              <span className="bet-team">{bet.team2}</span>
+              <span className="bet-potential up">+{fmt(bet.stake * (bet.player2Odds - 1))}</span>
+              <span className="bet-odds-label">odds {bet.player2Odds}</span>
+            </div>
           </div>
           {isAdmin && (
             <div className="bet-actions">
@@ -955,7 +974,7 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-function Admin({ games, players, bets, addGame, removeGame, updateGame, removePlayer, settleBet, isAdmin, setIsAdmin }) {
+function Admin({ games, players, bets, addGame, removeGame, updateGame, removePlayer, settleBet, isAdmin, setIsAdmin, updatePlayerUsername }) {
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
   const [team1, setTeam1] = useState('')
@@ -967,6 +986,8 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
   const [confirmPlayer, setConfirmPlayer] = useState(null)
   const [editingGame, setEditingGame] = useState(null)
   const [editFields, setEditFields] = useState({})
+  const [editingUsername, setEditingUsername] = useState(null)
+  const [editUsernameVal, setEditUsernameVal] = useState('')
 
   function handleLogin(e) {
     e.preventDefault()
@@ -1112,14 +1133,32 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
         {players.length === 0 && <p className="empty">No players.</p>}
         {players.map(p => (
           <div key={p.id} className="player-row">
-            <span className="name">{p.username}</span>
-            <div className="player-row-right">
-              <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
-              <button className={`undo-btn ${confirmPlayer === p.id ? 'confirming' : ''}`}
-                onClick={() => { if (confirmPlayer === p.id) { removePlayer(p.id); setConfirmPlayer(null) } else setConfirmPlayer(p.id) }}>
-                {confirmPlayer === p.id ? 'Confirm delete?' : 'Delete'}
-              </button>
-            </div>
+            {editingUsername === p.id ? (
+              <>
+                <input className="edit-name-input" value={editUsernameVal}
+                  onChange={e => setEditUsernameVal(e.target.value)}
+                  placeholder={p.username} autoFocus />
+                <div className="player-row-right">
+                  <button className="edit-save-btn" onClick={async () => {
+                    if (editUsernameVal.trim()) await updatePlayerUsername(p.id, editUsernameVal.trim())
+                    setEditingUsername(null)
+                  }}>Save</button>
+                  <button className="edit-btn" onClick={() => setEditingUsername(null)}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <>
+                <span className="name">{p.username}</span>
+                <div className="player-row-right">
+                  <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
+                  <button className="edit-btn" onClick={() => { setEditingUsername(p.id); setEditUsernameVal(p.username) }}>Rename</button>
+                  <button className={`undo-btn ${confirmPlayer === p.id ? 'confirming' : ''}`}
+                    onClick={() => { if (confirmPlayer === p.id) { removePlayer(p.id); setConfirmPlayer(null) } else setConfirmPlayer(p.id) }}>
+                    {confirmPlayer === p.id ? 'Confirm delete?' : 'Delete'}
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
