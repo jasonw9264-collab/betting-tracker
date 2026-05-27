@@ -429,6 +429,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
   const [editStakeVal, setEditStakeVal] = useState('')
   const [confirming, setConfirming] = useState(null)
   const [stakeErrors, setStakeErrors] = useState({})
+  const [editStakeError, setEditStakeError] = useState('')
 
   function getMax(listing) {
     if (!currentPlayer) return null
@@ -437,6 +438,21 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
     return listing.publisherSide === 1
       ? calcMaxStake(publisher, currentPlayer, listing.odds1, listing.odds2, activeBets)
       : calcMaxStake(currentPlayer, publisher, listing.odds1, listing.odds2, activeBets)
+  }
+
+  function handleEditStakeChange(listing, val) {
+    setEditStakeVal(val)
+    setEditStakeError('')
+    const sv = parseFloat(val)
+    if (!sv || sv <= 0) return
+    const publisher = players.find(p => p.id === listing.publisherId)
+    if (!publisher) return
+    const availBal = availableBalance(publisher, activeBets)
+    const opponentOdds = listing.publisherSide === 1 ? listing.odds2 : listing.odds1
+    const maxStake = availBal / (opponentOdds - 1)
+    if (sv > maxStake + 0.001) {
+      setEditStakeError(`Max stake is ${fmt(maxStake)} — your available balance of ${fmt(availBal)} can't cover a loss at these odds.`)
+    }
   }
 
   function handleStakeChange(listingId, val, max) {
@@ -502,14 +518,15 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
                 {editingStake === listing.id ? (
                   <>
                     <input className="inline-input" type="number" step="0.01" min="0" placeholder="Stake ($)"
-                      value={editStakeVal} onChange={e => setEditStakeVal(e.target.value)} />
-                    <button className="edit-save-btn" onClick={async () => { await editListingStake(listing.id, editStakeVal); setEditingStake(null) }}>Save</button>
-                    <button className="edit-btn" onClick={() => setEditingStake(null)}>Cancel</button>
+                      value={editStakeVal} onChange={e => handleEditStakeChange(listing, e.target.value)} />
+                    {editStakeError && <p className="stake-error">{editStakeError}</p>}
+                    <button className="edit-save-btn" disabled={!!editStakeError} onClick={async () => { await editListingStake(listing.id, editStakeVal); setEditingStake(null); setEditStakeError('') }}>Save</button>
+                    <button className="edit-btn" onClick={() => { setEditingStake(null); setEditStakeError('') }}>Cancel</button>
                   </>
                 ) : (
                   <>
                     <span className="settle-label">Stake: {listing.stake ? fmt(listing.stake) : 'open'}</span>
-                    <button className="edit-btn" onClick={() => { setEditingStake(listing.id); setEditStakeVal(listing.stake || '') }}>Edit Stake</button>
+                    <button className="edit-btn" onClick={() => { setEditingStake(listing.id); setEditStakeVal(listing.stake || ''); setEditStakeError('') }}>Edit Stake</button>
                     <button
                       className={`undo-btn ${confirming === listing.id ? 'confirming' : ''}`}
                       onClick={() => { if (confirming === listing.id) { cancelListing(listing.id); setConfirming(null) } else setConfirming(listing.id) }}
