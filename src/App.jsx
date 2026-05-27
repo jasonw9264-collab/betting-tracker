@@ -214,7 +214,12 @@ export default function App() {
   if (!session) {
     return (
       <div className="app">
-        <header><h1>Bet Tracker</h1></header>
+        <header>
+          <div className="header-title">
+            <h1>Gamble Gamble</h1>
+            <span className="header-subtitle">valorant edition</span>
+          </div>
+        </header>
         <AuthScreen players={players} onLogin={login} />
       </div>
     )
