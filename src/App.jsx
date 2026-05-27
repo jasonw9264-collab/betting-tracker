@@ -35,7 +35,7 @@ function calcMaxStake(p1, p2, odds1, odds2, activeBets) {
 }
 
 function fmt(n) {
-  return `$${Number(n).toFixed(2)}`
+  return `${Math.round(n * 100)} pts`
 }
 
 function today() {
@@ -458,6 +458,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
 
   function handleStakeChange(listingId, val, max) {
     setTakerStakes(s => ({ ...s, [listingId]: val }))
+    setConfirming(null)
     const s = parseFloat(val)
     if (max !== null && s > max + 0.001) {
       setStakeErrors(e => ({ ...e, [listingId]: `Max stake is ${fmt(max)} based on available funds` }))
@@ -512,16 +513,27 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
 
             {isOwn ? (
               <>
-                <div className="bet-header">
-                  <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span>{name(listing.publisherId)}</span>
+                <div className="taker-matchup">
+                  <div className="taker-side you">
+                    <span className="taker-label">You back</span>
+                    <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span></span>
+                  </div>
                   <span className="vs">vs</span>
-                  <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span>(open)</span>
+                  <div className="taker-side them">
+                    <span className="taker-label">No taker yet</span>
+                    <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span></span>
+                  </div>
                 </div>
                 {listing.stake > 0 && (
-                  <div className="bet-info">
-                    Stake: {fmt(listing.stake)}
-                    &nbsp;·&nbsp;{publisherTeam} wins → you +{fmt(listing.stake * (publisherOdds - 1))}
-                    &nbsp;·&nbsp;{takerTeam} wins → taker +{fmt(listing.stake * (takerOdds - 1))}
+                  <div className="payout-preview">
+                    <div className="payout-row win">
+                      <span>{publisherTeam} wins</span>
+                      <span>You <strong>+{fmt(listing.stake * (publisherOdds - 1))}</strong></span>
+                    </div>
+                    <div className="payout-row lose">
+                      <span>{takerTeam} wins</span>
+                      <span>You <strong>-{fmt(listing.stake * (takerOdds - 1))}</strong></span>
+                    </div>
                   </div>
                 )}
               </>
@@ -558,7 +570,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
               <div className="bet-actions">
                 {editingStake === listing.id ? (
                   <>
-                    <input className="inline-input" type="number" step="0.01" min="0" placeholder="Stake ($)"
+                    <input className="inline-input" type="number" step="0.01" min="0" placeholder="Stake (pts)"
                       value={editStakeVal} onChange={e => handleEditStakeChange(listing, e.target.value)} />
                     {editStakeError && <p className="stake-error">{editStakeError}</p>}
                     <button className="edit-save-btn" disabled={!!editStakeError} onClick={async () => { await editListingStake(listing.id, editStakeVal); setEditingStake(null); setEditStakeError('') }}>Save</button>
@@ -582,7 +594,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
                 {!listing.stake && (
                   <div className="form-group">
                     <input className="inline-input" type="number" step="0.01" min="0.01"
-                      placeholder={max !== null && max > 0 ? `Enter stake (max ${fmt(max)})` : 'Stake ($)'}
+                      placeholder={max !== null && max > 0 ? `Enter stake (max ${fmt(max)})` : 'Stake (pts)'}
                       value={takerStake}
                       onChange={e => handleStakeChange(listing.id, e.target.value, max)}
                     />
@@ -591,10 +603,14 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
                 )}
                 {max !== null && max <= 0
                   ? <p className="stake-error">You don't have enough available funds for this bet.</p>
-                  : <button className="win-btn"
+                  : <button
+                      className={`win-btn ${confirming === 'take-' + listing.id ? 'confirming' : ''}`}
                       disabled={!!stakeError || (!listing.stake && (!takerStake || parseFloat(takerStake) <= 0))}
-                      onClick={() => takeListing(listing, takerStake)}>
-                      Take this bet
+                      onClick={() => {
+                        if (confirming === 'take-' + listing.id) { takeListing(listing, takerStake); setConfirming(null) }
+                        else setConfirming('take-' + listing.id)
+                      }}>
+                      {confirming === 'take-' + listing.id ? 'Confirm bet?' : 'Take this bet'}
                     </button>
                 }
               </div>
@@ -688,7 +704,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
             <div className="form-group stake-group">
               <label>Stake — optional, leave blank to decide when someone takes it</label>
               <input type="number" step="0.01" min="0.01" value={stake}
-                onChange={e => handleStakeChange(e.target.value)} placeholder="$0.00" />
+                onChange={e => handleStakeChange(e.target.value)} placeholder="0 pts" />
               {stakeError && <p className="stake-error">{stakeError}</p>}
             </div>
 
@@ -1093,7 +1109,7 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
           <div key={p.id} className="player-row">
             <span className="name">{p.username}</span>
             <div className="player-row-right">
-              <span className={p.balance >= 50 ? 'up' : 'down'}>${p.balance?.toFixed(2)}</span>
+              <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
               <button className={`undo-btn ${confirmPlayer === p.id ? 'confirming' : ''}`}
                 onClick={() => { if (confirmPlayer === p.id) { removePlayer(p.id); setConfirmPlayer(null) } else setConfirmPlayer(p.id) }}>
                 {confirmPlayer === p.id ? 'Confirm delete?' : 'Delete'}
