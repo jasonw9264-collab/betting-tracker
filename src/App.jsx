@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { db } from './firebase'
 import {
   collection, onSnapshot, addDoc, updateDoc, deleteDoc, doc,
@@ -38,6 +38,10 @@ function fmt(n) {
   return `$${Number(n).toFixed(2)}`
 }
 
+function today() {
+  return new Date().toISOString().split('T')[0]
+}
+
 const ADMIN_PASSWORD = '888'
 
 // ── Auth Screen ───────────────────────────────────────────────────────────────
@@ -55,17 +59,9 @@ function AuthScreen({ players, onLogin }) {
     setError('')
     setLoading(true)
     const player = players.find(p => p.username?.toLowerCase() === username.trim().toLowerCase())
-    if (!player) {
-      setError('Username not found.')
-      setLoading(false)
-      return
-    }
+    if (!player) { setError('Username not found.'); setLoading(false); return }
     const hash = await hashPassword(password)
-    if (hash !== player.passwordHash) {
-      setError('Incorrect password.')
-      setLoading(false)
-      return
-    }
+    if (hash !== player.passwordHash) { setError('Incorrect password.'); setLoading(false); return }
     onLogin(player.id, player.username)
     setLoading(false)
   }
@@ -77,17 +73,12 @@ function AuthScreen({ players, onLogin }) {
     if (!trimmed) return setError('Username cannot be empty.')
     if (password.length < 3) return setError('Password must be at least 3 characters.')
     if (password !== confirmPassword) return setError('Passwords do not match.')
-    const exists = players.find(p => p.username?.toLowerCase() === trimmed.toLowerCase())
-    if (exists) return setError('Username already taken.')
+    if (players.find(p => p.username?.toLowerCase() === trimmed.toLowerCase())) return setError('Username already taken.')
     setLoading(true)
     const hash = await hashPassword(password)
     const ref = await addDoc(collection(db, 'players'), {
-      username: trimmed,
-      passwordHash: hash,
-      balance: 50,
-      wins: 0,
-      losses: 0,
-      createdAt: serverTimestamp()
+      username: trimmed, passwordHash: hash,
+      balance: 50, wins: 0, losses: 0, createdAt: serverTimestamp()
     })
     onLogin(ref.id, trimmed)
     setLoading(false)
@@ -96,14 +87,9 @@ function AuthScreen({ players, onLogin }) {
   return (
     <div className="auth-screen">
       <div className="auth-tabs">
-        <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError('') }}>
-          Sign In
-        </button>
-        <button className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setError('') }}>
-          Create Account
-        </button>
+        <button className={mode === 'login' ? 'active' : ''} onClick={() => { setMode('login'); setError('') }}>Sign In</button>
+        <button className={mode === 'register' ? 'active' : ''} onClick={() => { setMode('register'); setError('') }}>Create Account</button>
       </div>
-
       {mode === 'login' ? (
         <form className="auth-form" onSubmit={handleLogin}>
           <div className="form-group">
@@ -115,9 +101,7 @@ function AuthScreen({ players, onLogin }) {
             <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Your password" required />
           </div>
           {error && <p className="error">{error}</p>}
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
+          <button type="submit" className="submit-btn" disabled={loading}>{loading ? 'Signing in...' : 'Sign In'}</button>
         </form>
       ) : (
         <form className="auth-form" onSubmit={handleRegister}>
@@ -134,10 +118,48 @@ function AuthScreen({ players, onLogin }) {
             <input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Repeat password" required />
           </div>
           {error && <p className="error">{error}</p>}
-          <button type="submit" className="submit-btn" disabled={loading}>
-            {loading ? 'Creating...' : 'Create Account'}
-          </button>
+          <button type="submit" className="submit-btn" disabled={loading}>{loading ? 'Creating...' : 'Create Account'}</button>
         </form>
+      )}
+    </div>
+  )
+}
+
+// ── Gear Menu ─────────────────────────────────────────────────────────────────
+
+function GearMenu({ onNavigate, isAdmin }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef(null)
+
+  useEffect(() => {
+    function handleClick(e) {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
+
+  function go(tab) {
+    onNavigate(tab)
+    setOpen(false)
+  }
+
+  return (
+    <div className="gear-wrapper" ref={ref}>
+      <button className="gear-btn" onClick={() => setOpen(o => !o)} aria-label="Settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="12" r="3" />
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+        </svg>
+        {isAdmin && <span className="admin-dot" />}
+      </button>
+      {open && (
+        <div className="gear-dropdown">
+          <button onClick={() => go('profile')}>My Profile</button>
+          <button onClick={() => go('admin')}>
+            Admin {isAdmin && <span className="admin-badge">Unlocked</span>}
+          </button>
+        </div>
       )}
     </div>
   )
@@ -151,6 +173,7 @@ export default function App() {
   const [games, setGames] = useState([])
   const [listings, setListings] = useState([])
   const [tab, setTab] = useState('market')
+  const [isAdmin, setIsAdmin] = useState(false)
   const [session, setSession] = useState(() => {
     try { return JSON.parse(localStorage.getItem('session')) || null }
     catch { return null }
@@ -184,6 +207,7 @@ export default function App() {
 
   function logout() {
     setSession(null)
+    setIsAdmin(false)
     localStorage.removeItem('session')
   }
 
@@ -203,30 +227,23 @@ export default function App() {
   const avail = (p) => availableBalance(p, activeBets)
 
   // Games
-  async function addGame(team1, odds1, team2, odds2) {
+  async function addGame(team1, odds1, team2, odds2, matchDate) {
     await addDoc(collection(db, 'games'), {
       team1, odds1: parseFloat(odds1), team2, odds2: parseFloat(odds2),
-      createdAt: serverTimestamp()
+      matchDate, createdAt: serverTimestamp()
     })
   }
 
-  async function removeGame(id) {
-    await deleteDoc(doc(db, 'games', id))
-  }
-
-  async function removePlayer(id) {
-    await deleteDoc(doc(db, 'players', id))
-  }
+  async function removeGame(id) { await deleteDoc(doc(db, 'games', id)) }
+  async function removePlayer(id) { await deleteDoc(doc(db, 'players', id)) }
 
   // Listings
   async function publishListing({ gameId, team1, team2, odds1, odds2, publisherSide, stake }) {
     await addDoc(collection(db, 'listings'), {
       publisherId: session.playerId,
-      gameId, team1, team2, odds1, odds2,
-      publisherSide,
+      gameId, team1, team2, odds1, odds2, publisherSide,
       stake: stake ? parseFloat(stake) : null,
-      status: 'open',
-      createdAt: serverTimestamp()
+      status: 'open', createdAt: serverTimestamp()
     })
   }
 
@@ -235,30 +252,21 @@ export default function App() {
   }
 
   async function editListingStake(id, stake) {
-    await updateDoc(doc(db, 'listings', id), {
-      stake: stake ? parseFloat(stake) : null
-    })
+    await updateDoc(doc(db, 'listings', id), { stake: stake ? parseFloat(stake) : null })
   }
 
   async function takeListing(listing, takerStake) {
     const takerId = session.playerId
     const finalStake = listing.stake ?? parseFloat(takerStake)
-    let player1Id, player2Id
-    if (listing.publisherSide === 1) {
-      player1Id = listing.publisherId
-      player2Id = takerId
-    } else {
-      player1Id = takerId
-      player2Id = listing.publisherId
-    }
+    const player1Id = listing.publisherSide === 1 ? listing.publisherId : takerId
+    const player2Id = listing.publisherSide === 1 ? takerId : listing.publisherId
     await Promise.all([
       addDoc(collection(db, 'bets'), {
         player1Id, player2Id,
         team1: listing.team1, team2: listing.team2,
         player1Odds: listing.odds1, player2Odds: listing.odds2,
         stake: finalStake, status: 'active',
-        listingId: listing.id,
-        createdAt: serverTimestamp()
+        listingId: listing.id, createdAt: serverTimestamp()
       }),
       updateDoc(doc(db, 'listings', listing.id), { status: 'taken', takerId })
     ])
@@ -325,24 +333,33 @@ export default function App() {
     <div className="app">
       <header>
         <h1>Bet Tracker</h1>
-        <div className="player-selector">
-          <span className="header-username">{session.username}</span>
-          {currentPlayer && (
-            <span className="header-balance">{fmt(avail(currentPlayer))} available</span>
-          )}
+        <div className="header-right">
+          <div className="header-info">
+            <span className="header-username">{session.username}</span>
+            {currentPlayer && (
+              <span className="header-balance">{fmt(avail(currentPlayer))} available</span>
+            )}
+          </div>
           <button className="signout-btn" onClick={logout}>Sign Out</button>
+          <GearMenu onNavigate={setTab} isAdmin={isAdmin} />
         </div>
       </header>
 
-      <nav>
+      <nav className="nav-primary">
         {[
           ['market', `Market (${openListings.length})`],
           ['new', '+ New Bet'],
           ['bets', `Active (${activeBets.length})`],
+        ].map(([key, label]) => (
+          <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
+            {label}
+          </button>
+        ))}
+      </nav>
+      <nav className="nav-secondary">
+        {[
           ['leaderboard', 'Leaderboard'],
           ['history', 'History'],
-          ['profile', 'My Profile'],
-          ['admin', 'Admin'],
         ].map(([key, label]) => (
           <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
             {label}
@@ -353,41 +370,38 @@ export default function App() {
       <main>
         {tab === 'market' && (
           <Market
-            listings={openListings}
-            players={players}
-            currentPlayer={currentPlayer}
-            activeBets={activeBets}
-            takeListing={takeListing}
-            cancelListing={cancelListing}
-            editListingStake={editListingStake}
-            sessionId={session.playerId}
+            listings={openListings} players={players}
+            currentPlayer={currentPlayer} activeBets={activeBets}
+            takeListing={takeListing} cancelListing={cancelListing}
+            editListingStake={editListingStake} sessionId={session.playerId}
           />
         )}
         {tab === 'new' && (
           <NewBet
-            games={games}
-            currentPlayer={currentPlayer}
-            activeBets={activeBets}
-            publishListing={publishListing}
-            setTab={setTab}
+            games={games} currentPlayer={currentPlayer}
+            activeBets={activeBets} publishListing={publishListing} setTab={setTab}
           />
         )}
         {tab === 'bets' && (
-          <ActiveBets bets={activeBets} players={players} settleBet={settleBet} cancelBet={cancelBet} />
+          <ActiveBets
+            bets={activeBets} players={players}
+            settleBet={settleBet} cancelBet={cancelBet} isAdmin={isAdmin}
+          />
         )}
         {tab === 'leaderboard' && <Leaderboard players={players} avail={avail} />}
-        {tab === 'history' && <History bets={settledBets} players={players} undoBet={undoBet} />}
+        {tab === 'history' && <History bets={settledBets} players={players} undoBet={undoBet} isAdmin={isAdmin} />}
         {tab === 'profile' && (
           <Profile
-            currentPlayer={currentPlayer}
-            session={session}
-            updateUsername={updateUsername}
-            updatePassword={updatePassword}
-            players={players}
+            currentPlayer={currentPlayer} session={session} players={players}
+            updateUsername={updateUsername} updatePassword={updatePassword}
           />
         )}
         {tab === 'admin' && (
-          <Admin games={games} players={players} addGame={addGame} removeGame={removeGame} removePlayer={removePlayer} />
+          <Admin
+            games={games} players={players} bets={activeBets}
+            addGame={addGame} removeGame={removeGame} removePlayer={removePlayer}
+            settleBet={settleBet} isAdmin={isAdmin} setIsAdmin={setIsAdmin}
+          />
         )}
       </main>
     </div>
@@ -402,28 +416,28 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
   const [editingStake, setEditingStake] = useState(null)
   const [editStakeVal, setEditStakeVal] = useState('')
   const [confirming, setConfirming] = useState(null)
+  const [stakeErrors, setStakeErrors] = useState({})
 
   function getMax(listing) {
     if (!currentPlayer) return null
     const publisher = players.find(p => p.id === listing.publisherId)
     if (!publisher) return null
-    if (listing.publisherSide === 1) {
-      return calcMaxStake(publisher, currentPlayer, listing.odds1, listing.odds2, activeBets)
+    return listing.publisherSide === 1
+      ? calcMaxStake(publisher, currentPlayer, listing.odds1, listing.odds2, activeBets)
+      : calcMaxStake(currentPlayer, publisher, listing.odds1, listing.odds2, activeBets)
+  }
+
+  function handleStakeChange(listingId, val, max) {
+    setTakerStakes(s => ({ ...s, [listingId]: val }))
+    const s = parseFloat(val)
+    if (max !== null && s > max + 0.001) {
+      setStakeErrors(e => ({ ...e, [listingId]: `Max stake is ${fmt(max)} based on available funds` }))
     } else {
-      return calcMaxStake(currentPlayer, publisher, listing.odds1, listing.odds2, activeBets)
+      setStakeErrors(e => ({ ...e, [listingId]: null }))
     }
   }
 
-  async function handleTake(listing) {
-    if (!currentPlayer) return
-    const stake = listing.stake ?? parseFloat(takerStakes[listing.id])
-    if (!stake || stake <= 0) return
-    await takeListing(listing, stake)
-  }
-
-  if (!currentPlayer) {
-    return <section><h2>Market</h2><p className="empty">Loading...</p></section>
-  }
+  if (!currentPlayer) return <section><h2>Market</h2><p className="empty">Loading...</p></section>
 
   return (
     <section>
@@ -438,6 +452,7 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
         const max = isOwn ? null : getMax(listing)
         const takerStake = takerStakes[listing.id] || ''
         const displayStake = listing.stake ?? parseFloat(takerStake)
+        const stakeError = stakeErrors[listing.id]
 
         return (
           <div key={listing.id} className={`bet-card ${isOwn ? 'own-listing' : ''}`}>
@@ -471,10 +486,7 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
                     <button className="edit-btn" onClick={() => { setEditingStake(listing.id); setEditStakeVal(listing.stake || '') }}>Edit Stake</button>
                     <button
                       className={`undo-btn ${confirming === listing.id ? 'confirming' : ''}`}
-                      onClick={() => {
-                        if (confirming === listing.id) { cancelListing(listing.id); setConfirming(null) }
-                        else setConfirming(listing.id)
-                      }}
+                      onClick={() => { if (confirming === listing.id) { cancelListing(listing.id); setConfirming(null) } else setConfirming(listing.id) }}
                     >
                       {confirming === listing.id ? 'Confirm cancel?' : 'Cancel Bet'}
                     </button>
@@ -482,23 +494,25 @@ function Market({ listings, players, currentPlayer, activeBets, takeListing, can
                 )}
               </div>
             ) : (
-              <div className="bet-actions">
+              <div className="take-section">
                 {!listing.stake && (
-                  <input className="inline-input" type="number" step="0.01" min="0.01"
-                    placeholder={max !== null ? `Max ${fmt(max)}` : 'Stake ($)'}
-                    value={takerStake}
-                    onChange={e => setTakerStakes(s => ({ ...s, [listing.id]: e.target.value }))}
-                  />
+                  <div className="form-group">
+                    <input className="inline-input" type="number" step="0.01" min="0.01"
+                      placeholder={max !== null && max > 0 ? `Enter stake (max ${fmt(max)})` : 'Stake ($)'}
+                      value={takerStake}
+                      onChange={e => handleStakeChange(listing.id, e.target.value, max)}
+                    />
+                    {stakeError && <p className="stake-error">{stakeError}</p>}
+                  </div>
                 )}
                 {max !== null && max <= 0
-                  ? <span className="error-inline">Insufficient funds</span>
+                  ? <p className="stake-error">You don't have enough available funds for this bet.</p>
                   : <button className="win-btn"
-                      disabled={!listing.stake && (!takerStake || parseFloat(takerStake) <= 0)}
-                      onClick={() => handleTake(listing)}>
+                      disabled={!!stakeError || (!listing.stake && (!takerStake || parseFloat(takerStake) <= 0))}
+                      onClick={() => takeListing(listing, takerStake)}>
                       Take this bet
                     </button>
                 }
-                {max !== null && max > 0 && <span className="max-label">max {fmt(max)}</span>}
               </div>
             )}
           </div>
@@ -514,29 +528,45 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
   const [gameId, setGameId] = useState('')
   const [side, setSide] = useState('')
   const [stake, setStake] = useState('')
+  const [stakeError, setStakeError] = useState('')
 
-  const game = games.find(g => g.id === gameId)
+  const upcomingGames = games.filter(g => !g.matchDate || g.matchDate >= today())
+  const game = upcomingGames.find(g => g.id === gameId)
   const myOdds = game ? (side === '1' ? game.odds1 : game.odds2) : null
   const myTeam = game ? (side === '1' ? game.team1 : game.team2) : null
   const theirOdds = game ? (side === '1' ? game.odds2 : game.odds1) : null
   const theirTeam = game ? (side === '1' ? game.team2 : game.team1) : null
   const s = parseFloat(stake)
 
+  function handleStakeChange(val) {
+    setStake(val)
+    setStakeError('')
+    const sv = parseFloat(val)
+    if (!currentPlayer || !sv || sv <= 0) return
+    const availBal = availableBalance(currentPlayer, activeBets)
+    if (myOdds && theirOdds) {
+      const maxForMe = availBal / (theirOdds - 1)
+      if (sv > maxForMe + 0.001) {
+        setStakeError(`You can't bet more than ${fmt(maxForMe)} — your available balance of ${fmt(availBal)} can't cover a loss if ${theirTeam} wins.`)
+      }
+    }
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!currentPlayer || !game || !side) return
+    if (!currentPlayer || !game || !side || stakeError) return
     await publishListing({
       gameId, team1: game.team1, team2: game.team2,
       odds1: game.odds1, odds2: game.odds2,
       publisherSide: parseInt(side),
       stake: s > 0 ? s : null
     })
-    setGameId(''); setSide(''); setStake('')
+    setGameId(''); setSide(''); setStake(''); setStakeError('')
     setTab('market')
   }
 
   if (!currentPlayer) return <section><h2>+ New Bet</h2><p className="empty">Loading...</p></section>
-  if (games.length === 0) return <section><h2>+ New Bet</h2><p className="empty">No games available. Ask the admin to add some.</p></section>
+  if (upcomingGames.length === 0) return <section><h2>+ New Bet</h2><p className="empty">No upcoming games. Ask the admin to add some.</p></section>
 
   return (
     <section>
@@ -544,10 +574,12 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
       <form className="bet-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Select Game</label>
-          <select value={gameId} onChange={e => { setGameId(e.target.value); setSide('') }} required>
+          <select value={gameId} onChange={e => { setGameId(e.target.value); setSide(''); setStake(''); setStakeError('') }} required>
             <option value="">Choose a game...</option>
-            {games.map(g => (
-              <option key={g.id} value={g.id}>{g.team1} ({g.odds1}) vs {g.team2} ({g.odds2})</option>
+            {upcomingGames.map(g => (
+              <option key={g.id} value={g.id}>
+                {g.team1} ({g.odds1}) vs {g.team2} ({g.odds2}){g.matchDate ? ` — ${g.matchDate}` : ''}
+              </option>
             ))}
           </select>
         </div>
@@ -556,10 +588,10 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
           <div className="form-group">
             <label>I'm backing</label>
             <div className="side-picker">
-              <button type="button" className={`side-btn ${side === '1' ? 'selected' : ''}`} onClick={() => setSide('1')}>
+              <button type="button" className={`side-btn ${side === '1' ? 'selected' : ''}`} onClick={() => { setSide('1'); setStake(''); setStakeError('') }}>
                 {game.team1}<span className="odds-tag">{game.odds1}</span>
               </button>
-              <button type="button" className={`side-btn ${side === '2' ? 'selected' : ''}`} onClick={() => setSide('2')}>
+              <button type="button" className={`side-btn ${side === '2' ? 'selected' : ''}`} onClick={() => { setSide('2'); setStake(''); setStakeError('') }}>
                 {game.team2}<span className="odds-tag">{game.odds2}</span>
               </button>
             </div>
@@ -571,10 +603,11 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
             <div className="form-group stake-group">
               <label>Stake — optional, leave blank to decide when someone takes it</label>
               <input type="number" step="0.01" min="0.01" value={stake}
-                onChange={e => setStake(e.target.value)} placeholder="$0.00" />
+                onChange={e => handleStakeChange(e.target.value)} placeholder="$0.00" />
+              {stakeError && <p className="stake-error">{stakeError}</p>}
             </div>
 
-            {s > 0 && myOdds && theirOdds && (
+            {s > 0 && !stakeError && myOdds && theirOdds && (
               <div className="payout-preview">
                 <div className="payout-row win">
                   <span>{myTeam} wins</span>
@@ -587,7 +620,9 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
               </div>
             )}
 
-            <button type="submit" className="submit-btn">Publish to Market</button>
+            <button type="submit" className="submit-btn" disabled={!!stakeError}>
+              Publish to Market
+            </button>
           </>
         )}
       </form>
@@ -597,7 +632,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab }) {
 
 // ── Active Bets ───────────────────────────────────────────────────────────────
 
-function ActiveBets({ bets, players, settleBet, cancelBet }) {
+function ActiveBets({ bets, players, settleBet, cancelBet, isAdmin }) {
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const [confirming, setConfirming] = useState(null)
   const [cancelling, setCancelling] = useState(null)
@@ -616,6 +651,9 @@ function ActiveBets({ bets, players, settleBet, cancelBet }) {
   return (
     <section>
       <h2>Active Bets</h2>
+      {!isAdmin && bets.length > 0 && (
+        <p className="admin-note">Results are settled by the admin once games finish.</p>
+      )}
       {bets.length === 0 && <p className="empty">No active bets.</p>}
       {bets.map(bet => (
         <div key={bet.id} className="bet-card">
@@ -629,21 +667,23 @@ function ActiveBets({ bets, players, settleBet, cancelBet }) {
             &nbsp;·&nbsp;{bet.team1} wins → {name(bet.player1Id)} +{fmt(bet.stake * (bet.player1Odds - 1))}
             &nbsp;·&nbsp;{bet.team2} wins → {name(bet.player2Id)} +{fmt(bet.stake * (bet.player2Odds - 1))}
           </div>
-          <div className="bet-actions">
-            <span className="settle-label">Settle:</span>
-            <button className={`win-btn ${confirming === `${bet.id}-${bet.player1Id}` ? 'confirming' : ''}`}
-              onClick={() => handleSettle(bet, bet.player1Id)}>
-              {confirming === `${bet.id}-${bet.player1Id}` ? 'Confirm?' : `${bet.team1} won`}
-            </button>
-            <button className={`win-btn ${confirming === `${bet.id}-${bet.player2Id}` ? 'confirming' : ''}`}
-              onClick={() => handleSettle(bet, bet.player2Id)}>
-              {confirming === `${bet.id}-${bet.player2Id}` ? 'Confirm?' : `${bet.team2} won`}
-            </button>
-            <button className={`undo-btn ${cancelling === bet.id ? 'confirming' : ''}`}
-              onClick={() => handleCancel(bet)}>
-              {cancelling === bet.id ? 'Confirm remove?' : 'Remove'}
-            </button>
-          </div>
+          {isAdmin && (
+            <div className="bet-actions">
+              <span className="settle-label">Settle:</span>
+              <button className={`win-btn ${confirming === `${bet.id}-${bet.player1Id}` ? 'confirming' : ''}`}
+                onClick={() => handleSettle(bet, bet.player1Id)}>
+                {confirming === `${bet.id}-${bet.player1Id}` ? 'Confirm?' : `${bet.team1} won`}
+              </button>
+              <button className={`win-btn ${confirming === `${bet.id}-${bet.player2Id}` ? 'confirming' : ''}`}
+                onClick={() => handleSettle(bet, bet.player2Id)}>
+                {confirming === `${bet.id}-${bet.player2Id}` ? 'Confirm?' : `${bet.team2} won`}
+              </button>
+              <button className={`undo-btn ${cancelling === bet.id ? 'confirming' : ''}`}
+                onClick={() => handleCancel(bet)}>
+                {cancelling === bet.id ? 'Confirm remove?' : 'Remove'}
+              </button>
+            </div>
+          )}
         </div>
       ))}
     </section>
@@ -675,7 +715,7 @@ function Leaderboard({ players, avail }) {
 
 // ── History ───────────────────────────────────────────────────────────────────
 
-function History({ bets, players, undoBet }) {
+function History({ bets, players, undoBet, isAdmin }) {
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const [confirming, setConfirming] = useState(null)
 
@@ -702,11 +742,13 @@ function History({ bets, players, undoBet }) {
               Stake: {fmt(bet.stake)} &nbsp;·&nbsp;
               <span className="winner">{winnerName} ({winnerTeam}) won {fmt(bet.payout)}</span>
             </div>
-            <div className="bet-actions">
-              <button className={`undo-btn ${confirming === bet.id ? 'confirming' : ''}`} onClick={() => handleUndo(bet)}>
-                {confirming === bet.id ? 'Confirm undo?' : 'Undo'}
-              </button>
-            </div>
+            {isAdmin && (
+              <div className="bet-actions">
+                <button className={`undo-btn ${confirming === bet.id ? 'confirming' : ''}`} onClick={() => handleUndo(bet)}>
+                  {confirming === bet.id ? 'Confirm undo?' : 'Undo'}
+                </button>
+              </div>
+            )}
           </div>
         )
       })}
@@ -728,8 +770,8 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
     setUsernameMsg('')
     const trimmed = newUsername.trim()
     if (!trimmed) return
-    const exists = players.find(p => p.username?.toLowerCase() === trimmed.toLowerCase() && p.id !== session.playerId)
-    if (exists) return setUsernameMsg('Username already taken.')
+    if (players.find(p => p.username?.toLowerCase() === trimmed.toLowerCase() && p.id !== session.playerId))
+      return setUsernameMsg('Username already taken.')
     await updateUsername(trimmed)
     setNewUsername('')
     setUsernameMsg('Username updated!')
@@ -741,8 +783,7 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
     if (newPassword.length < 3) return setPasswordMsg('Password must be at least 3 characters.')
     if (newPassword !== confirmPassword) return setPasswordMsg('Passwords do not match.')
     await updatePassword(newPassword)
-    setNewPassword('')
-    setConfirmPassword('')
+    setNewPassword(''); setConfirmPassword('')
     setPasswordMsg('Password updated!')
   }
 
@@ -761,7 +802,6 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
           </div>
         </div>
       )}
-
       <div className="profile-section">
         <h3>Change Username</h3>
         <form className="bet-form" onSubmit={handleUsernameChange}>
@@ -773,7 +813,6 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
           <button type="submit" className="submit-btn">Update Username</button>
         </form>
       </div>
-
       <div className="profile-section">
         <h3>Change Password</h3>
         <form className="bet-form" onSubmit={handlePasswordChange}>
@@ -795,30 +834,34 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-function Admin({ games, players, addGame, removeGame, removePlayer }) {
-  const [unlocked, setUnlocked] = useState(false)
+function Admin({ games, players, bets, addGame, removeGame, removePlayer, settleBet, isAdmin, setIsAdmin }) {
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
   const [team1, setTeam1] = useState('')
   const [odds1, setOdds1] = useState('')
   const [team2, setTeam2] = useState('')
   const [odds2, setOdds2] = useState('')
+  const [matchDate, setMatchDate] = useState('')
   const [confirmGame, setConfirmGame] = useState(null)
   const [confirmPlayer, setConfirmPlayer] = useState(null)
 
   function handleLogin(e) {
     e.preventDefault()
-    if (pw === ADMIN_PASSWORD) { setUnlocked(true); setPwError(false) }
+    if (pw === ADMIN_PASSWORD) { setIsAdmin(true); setPwError(false) }
     else setPwError(true)
   }
 
   async function handleAddGame(e) {
     e.preventDefault()
-    await addGame(team1.trim(), odds1, team2.trim(), odds2)
-    setTeam1(''); setOdds1(''); setTeam2(''); setOdds2('')
+    await addGame(team1.trim(), odds1, team2.trim(), odds2, matchDate)
+    setTeam1(''); setOdds1(''); setTeam2(''); setOdds2(''); setMatchDate('')
   }
 
-  if (!unlocked) {
+  const upcomingGames = games.filter(g => !g.matchDate || g.matchDate >= today())
+  const pastGames = games.filter(g => g.matchDate && g.matchDate < today())
+  const name = (id) => players.find(p => p.id === id)?.username ?? '?'
+
+  if (!isAdmin) {
     return (
       <section>
         <h2>Admin</h2>
@@ -833,7 +876,9 @@ function Admin({ games, players, addGame, removeGame, removePlayer }) {
 
   return (
     <section>
-      <h2>Admin — Games</h2>
+      <div className="admin-unlocked-badge">Admin Unlocked</div>
+
+      <h2>Add Game</h2>
       <form className="bet-form" onSubmit={handleAddGame}>
         <div className="form-row">
           <div className="form-group">
@@ -852,16 +897,20 @@ function Admin({ games, players, addGame, removeGame, removePlayer }) {
             <label>Odds</label>
             <input type="number" step="0.01" min="1.01" value={odds2} onChange={e => setOdds2(e.target.value)} placeholder="1.80" required />
           </div>
+          <div className="form-group">
+            <label>Match Date</label>
+            <input type="date" value={matchDate} onChange={e => setMatchDate(e.target.value)} required />
+          </div>
         </div>
         <button type="submit" className="submit-btn">Add Game</button>
       </form>
 
-      <div style={{ marginTop: 24 }}>
-        <h2 style={{ marginBottom: 12 }}>Games List</h2>
-        {games.length === 0 && <p className="empty">No games added yet.</p>}
-        {games.map(g => (
+      <div style={{ marginTop: 28 }}>
+        <h2 style={{ marginBottom: 12 }}>Upcoming Games</h2>
+        {upcomingGames.length === 0 && <p className="empty">No upcoming games.</p>}
+        {upcomingGames.map(g => (
           <div key={g.id} className="player-row">
-            <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2})</span>
+            <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}){g.matchDate ? ` — ${g.matchDate}` : ''}</span>
             <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
               onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
               {confirmGame === g.id ? 'Confirm?' : 'Remove'}
@@ -870,6 +919,21 @@ function Admin({ games, players, addGame, removeGame, removePlayer }) {
         ))}
       </div>
 
+      {pastGames.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <h2 style={{ marginBottom: 12, color: '#475569' }}>Past Games</h2>
+          {pastGames.map(g => (
+            <div key={g.id} className="player-row" style={{ opacity: 0.5 }}>
+              <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}) — {g.matchDate}</span>
+              <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
+                onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
+                {confirmGame === g.id ? 'Confirm?' : 'Remove'}
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
       <div style={{ marginTop: 32 }}>
         <h2 style={{ marginBottom: 12 }}>Players</h2>
         {players.length === 0 && <p className="empty">No players.</p>}
@@ -877,7 +941,7 @@ function Admin({ games, players, addGame, removeGame, removePlayer }) {
           <div key={p.id} className="player-row">
             <span className="name">{p.username}</span>
             <div className="player-row-right">
-              <span className={p.balance >= 50 ? 'up' : 'down'}>{fmt(p.balance)}</span>
+              <span className={p.balance >= 50 ? 'up' : 'down'}>${p.balance?.toFixed(2)}</span>
               <button className={`undo-btn ${confirmPlayer === p.id ? 'confirming' : ''}`}
                 onClick={() => { if (confirmPlayer === p.id) { removePlayer(p.id); setConfirmPlayer(null) } else setConfirmPlayer(p.id) }}>
                 {confirmPlayer === p.id ? 'Confirm delete?' : 'Delete'}
