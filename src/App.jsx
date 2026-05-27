@@ -527,58 +527,57 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
             <div className="listing-badge">{isOwn ? 'Your listing' : `${name(listing.publisherId)}'s bet`}</div>
 
             {isOwn ? (
-              <>
-                <div className="taker-matchup">
-                  <div className="taker-side you">
-                    <span className="taker-label">You back</span>
-                    <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span></span>
-                  </div>
-                  <span className="vs">vs</span>
-                  <div className="taker-side them">
-                    <span className="taker-label">No taker yet</span>
-                    <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span></span>
-                  </div>
+              <div className="bet-versus">
+                <div className="bet-player-side">
+                  <span className="bet-player-name">You</span>
+                  <span className="bet-team">{publisherTeam}</span>
+                  {listing.stake > 0 && <>
+                    <span className="bet-potential up">+{fmt(listing.stake * (publisherOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(listing.stake * (takerOdds - 1))}</span>
+                  </>}
+                  <span className="bet-odds-label">odds {publisherOdds}</span>
                 </div>
-                {listing.stake > 0 && (
-                  <div className="payout-preview">
-                    <div className="payout-row win">
-                      <span>{publisherTeam} wins</span>
-                      <span>You <strong>+{fmt(listing.stake * (publisherOdds - 1))}</strong></span>
-                    </div>
-                    <div className="payout-row lose">
-                      <span>{takerTeam} wins</span>
-                      <span>You <strong>-{fmt(listing.stake * (takerOdds - 1))}</strong></span>
-                    </div>
-                  </div>
-                )}
-              </>
+                <div className="bet-vs-center">
+                  <span className="bet-vs-text">VS</span>
+                  <span className="bet-stake-label">stake</span>
+                  <span className="bet-stake-val">{listing.stake ? fmt(listing.stake) : '—'}</span>
+                </div>
+                <div className="bet-player-side right">
+                  <span className="bet-player-name">No taker yet</span>
+                  <span className="bet-team">{takerTeam}</span>
+                  {listing.stake > 0 && <>
+                    <span className="bet-potential up">+{fmt(listing.stake * (takerOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(listing.stake * (publisherOdds - 1))}</span>
+                  </>}
+                  <span className="bet-odds-label">odds {takerOdds}</span>
+                </div>
+              </div>
             ) : (
-              <>
-                <div className="taker-matchup">
-                  <div className="taker-side you">
-                    <span className="taker-label">You back</span>
-                    <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span></span>
-                  </div>
-                  <span className="vs">vs</span>
-                  <div className="taker-side them">
-                    <span className="taker-label">They back</span>
-                    <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span></span>
-                    <span className="taker-player">{name(listing.publisherId)}</span>
-                  </div>
+              <div className="bet-versus">
+                <div className="bet-player-side">
+                  <span className="bet-player-name">You</span>
+                  <span className="bet-team">{takerTeam}</span>
+                  {displayStake > 0 && <>
+                    <span className="bet-potential up">+{fmt(displayStake * (takerOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(displayStake * (publisherOdds - 1))}</span>
+                  </>}
+                  <span className="bet-odds-label">odds {takerOdds}</span>
                 </div>
-                {displayStake > 0 && (
-                  <div className="payout-preview">
-                    <div className="payout-row win">
-                      <span>{takerTeam} wins</span>
-                      <span>You <strong>+{fmt(displayStake * (takerOdds - 1))}</strong></span>
-                    </div>
-                    <div className="payout-row lose">
-                      <span>{publisherTeam} wins</span>
-                      <span>You <strong>-{fmt(displayStake * (publisherOdds - 1))}</strong></span>
-                    </div>
-                  </div>
-                )}
-              </>
+                <div className="bet-vs-center">
+                  <span className="bet-vs-text">VS</span>
+                  <span className="bet-stake-label">stake</span>
+                  <span className="bet-stake-val">{displayStake > 0 ? fmt(displayStake) : '?'}</span>
+                </div>
+                <div className="bet-player-side right">
+                  <span className="bet-player-name">{name(listing.publisherId)}</span>
+                  <span className="bet-team">{publisherTeam}</span>
+                  {displayStake > 0 && <>
+                    <span className="bet-potential up">+{fmt(displayStake * (publisherOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(displayStake * (takerOdds - 1))}</span>
+                  </>}
+                  <span className="bet-odds-label">odds {publisherOdds}</span>
+                </div>
+              </div>
             )}
 
             {isOwn ? (
