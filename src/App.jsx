@@ -42,6 +42,15 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
+function timeAgo(ts) {
+  if (!ts?.toMillis) return ''
+  const s = Math.floor((Date.now() - ts.toMillis()) / 1000)
+  if (s < 60) return 'just now'
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`
+  return `${Math.floor(s / 86400)}d ago`
+}
+
 const ADMIN_PASSWORD = '888'
 
 // ── Auth Screen ───────────────────────────────────────────────────────────────
@@ -178,6 +187,17 @@ export default function App() {
     try { return JSON.parse(localStorage.getItem('session')) || null }
     catch { return null }
   })
+  const [lastActiveVisit, setLastActiveVisit] = useState(() =>
+    parseInt(localStorage.getItem('lastActiveVisit') || '0')
+  )
+
+  useEffect(() => {
+    if (tab === 'bets') {
+      const now = Date.now()
+      setLastActiveVisit(now)
+      localStorage.setItem('lastActiveVisit', now.toString())
+    }
+  }, [tab])
 
   useEffect(() => {
     const u1 = onSnapshot(collection(db, 'players'), snap =>
@@ -228,6 +248,10 @@ export default function App() {
   const currentPlayer = players.find(p => p.id === session.playerId) || null
   const activeBets = bets.filter(b => b.status === 'active')
   const settledBets = bets.filter(b => b.status === 'settled')
+  const hasNewBets = activeBets.some(b =>
+    (b.player1Id === session.playerId || b.player2Id === session.playerId) &&
+    b.createdAt?.toMillis?.() > lastActiveVisit
+  )
   const openListings = listings.filter(l => l.status === 'open')
   const avail = (p) => availableBalance(p, activeBets)
 
@@ -251,11 +275,12 @@ export default function App() {
   async function removePlayer(id) { await deleteDoc(doc(db, 'players', id)) }
 
   // Listings
-  async function publishListing({ gameId, team1, team2, odds1, odds2, publisherSide, stake }) {
+  async function publishListing({ gameId, team1, team2, odds1, odds2, publisherSide, stake, matchDate }) {
     await addDoc(collection(db, 'listings'), {
       publisherId: session.playerId,
       gameId, team1, team2, odds1, odds2, publisherSide,
       stake: stake ? parseFloat(stake) : null,
+      matchDate: matchDate || null,
       status: 'open', createdAt: serverTimestamp()
     })
   }
@@ -279,6 +304,7 @@ export default function App() {
         team1: listing.team1, team2: listing.team2,
         player1Odds: listing.odds1, player2Odds: listing.odds2,
         stake: finalStake, status: 'active',
+        matchDate: listing.matchDate || null,
         listingId: listing.id, createdAt: serverTimestamp()
       }),
       updateDoc(doc(db, 'listings', listing.id), { status: 'taken', takerId })
@@ -371,14 +397,10 @@ export default function App() {
       </header>
 
       <nav className="nav-primary">
-        {[
-          ['market', `Market`],
-          ['bets', `Active (${activeBets.length})`],
-        ].map(([key, label]) => (
-          <button key={key} className={tab === key ? 'active' : ''} onClick={() => setTab(key)}>
-            {label}
-          </button>
-        ))}
+        <button className={tab === 'market' ? 'active' : ''} onClick={() => setTab('market')}>Market</button>
+        <button className={`${tab === 'bets' ? 'active' : ''} notif-btn`} onClick={() => setTab('bets')}>
+          Active ({activeBets.length}){hasNewBets && <span className="notif-dot" />}
+        </button>
       </nav>
       <nav className="nav-secondary">
         {[
@@ -413,11 +435,12 @@ export default function App() {
             settleBet={settleBet} cancelBet={cancelBet} isAdmin={isAdmin}
           />
         )}
-        {tab === 'leaderboard' && <Leaderboard players={players} avail={avail} />}
+        {tab === 'leaderboard' && <Leaderboard players={players} avail={avail} settledBets={settledBets} activeBets={activeBets} />}
         {tab === 'history' && <History bets={settledBets} players={players} undoBet={undoBet} isAdmin={isAdmin} />}
         {tab === 'profile' && (
           <Profile
             currentPlayer={currentPlayer} session={session} players={players}
+            settledBets={settledBets}
             updateUsername={updateUsername} updatePassword={updatePassword}
           />
         )}
@@ -524,7 +547,11 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
 
         return (
           <div key={listing.id} className={`bet-card ${isOwn ? 'own-listing' : ''}`}>
-            <div className="listing-badge">{isOwn ? 'Your listing' : `${name(listing.publisherId)}'s bet`}</div>
+            <div className="listing-badge">
+              {isOwn ? 'Your listing' : `${name(listing.publisherId)}'s bet`}
+              {listing.createdAt && <span className="listing-time"> · {timeAgo(listing.createdAt)}</span>}
+              {listing.matchDate && <span className="listing-time"> · match {listing.matchDate}</span>}
+            </div>
 
             {isOwn ? (
               <div className="bet-versus">
@@ -665,7 +692,8 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
       gameId, team1: game.team1, team2: game.team2,
       odds1: game.odds1, odds2: game.odds2,
       publisherSide: parseInt(side),
-      stake: s > 0 ? s / 100 : null
+      stake: s > 0 ? s / 100 : null,
+      matchDate: game.matchDate || null
     })
     setGameId(''); setSide(''); setStake(''); setStakeError('')
     setTab('market')
@@ -764,6 +792,7 @@ function ActiveBets({ bets, players, settleBet, cancelBet, isAdmin }) {
       {bets.length === 0 && <p className="empty">No active bets.</p>}
       {bets.map(bet => (
         <div key={bet.id} className="bet-card">
+          {bet.matchDate && <div className="listing-badge">Match: {bet.matchDate}</div>}
           <div className="bet-versus">
             <div className="bet-player-side">
               <span className="bet-player-name">{name(bet.player1Id)}</span>
@@ -808,23 +837,103 @@ function ActiveBets({ bets, players, settleBet, cancelBet, isAdmin }) {
 
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 
-function Leaderboard({ players, avail }) {
+function Leaderboard({ players, avail, settledBets, activeBets }) {
+  const [selectedId, setSelectedId] = useState(null)
+  const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const sorted = [...players].sort((a, b) => b.balance - a.balance)
+
+  if (selectedId) {
+    const p = players.find(x => x.id === selectedId)
+    if (!p) { setSelectedId(null); return null }
+    const myActive = activeBets.filter(b => b.player1Id === selectedId || b.player2Id === selectedId)
+    const mySettled = settledBets.filter(b => b.player1Id === selectedId || b.player2Id === selectedId)
+    const pnl = p.balance - 50
+    return (
+      <section>
+        <button className="back-btn" onClick={() => setSelectedId(null)}>← Leaderboard</button>
+        <h2>{p.username}</h2>
+        <div className="profile-stats">
+          <div className="profile-stat">
+            <span className="profile-stat-label">Balance</span>
+            <span className={`profile-stat-value ${p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat-label">P&L</span>
+            <span className={`profile-stat-value ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
+          </div>
+          <div className="profile-stat">
+            <span className="profile-stat-label">Record</span>
+            <span className="profile-stat-value">{p.wins || 0}W / {p.losses || 0}L</span>
+          </div>
+        </div>
+        {myActive.length > 0 && (
+          <>
+            <h2 style={{ marginTop: 20 }}>Active Bets</h2>
+            {myActive.map(bet => {
+              const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
+              const theirTeam = bet.player1Id === selectedId ? bet.team2 : bet.team1
+              const myOdds = bet.player1Id === selectedId ? bet.player1Odds : bet.player2Odds
+              const oppName = name(bet.player1Id === selectedId ? bet.player2Id : bet.player1Id)
+              return (
+                <div key={bet.id} className="bet-card">
+                  <div className="player-detail-row">
+                    <span className="bet-team own">{myTeam}</span>
+                    <span className="vs">vs</span>
+                    <span className="bet-team">{theirTeam}</span>
+                    <span className="taker-player">vs {oppName}</span>
+                  </div>
+                  <div className="bet-info">Stake: {fmt(bet.stake)} · odds {myOdds} · win +{fmt(bet.stake * (myOdds - 1))}</div>
+                </div>
+              )
+            })}
+          </>
+        )}
+        {mySettled.length > 0 && (
+          <>
+            <h2 style={{ marginTop: 20 }}>Bet History</h2>
+            {mySettled.map(bet => {
+              const won = bet.winnerId === selectedId
+              const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
+              const oppName = name(bet.player1Id === selectedId ? bet.player2Id : bet.player1Id)
+              return (
+                <div key={bet.id} className="bet-card settled">
+                  <div className="player-detail-row">
+                    <span className={`bet-team ${won ? 'own' : ''}`}>{myTeam}</span>
+                    <span className="vs">vs</span>
+                    <span className="taker-player">{oppName}</span>
+                    <span className={`bet-potential ${won ? 'up' : 'down'}`} style={{ marginLeft: 'auto' }}>
+                      {won ? '+' : '-'}{fmt(bet.payout)}
+                    </span>
+                  </div>
+                </div>
+              )
+            })}
+          </>
+        )}
+        {mySettled.length === 0 && myActive.length === 0 && <p className="empty">No bets yet.</p>}
+      </section>
+    )
+  }
+
   return (
     <section className="leaderboard">
       <h2>Leaderboard</h2>
       {sorted.length === 0 && <p className="empty">No players yet.</p>}
-      {sorted.map((p, i) => (
-        <div key={p.id} className="player-card">
-          <span className="rank">#{i + 1}</span>
-          <span className="name">{p.username}</span>
-          <div className="stats">
-            <span className={`balance ${p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
-            <span className="record">{p.wins || 0}W / {p.losses || 0}L</span>
-            <span className="avail">available: {fmt(avail(p))}</span>
+      {sorted.map((p, i) => {
+        const pnl = p.balance - 50
+        return (
+          <div key={p.id} className="player-card clickable" onClick={() => setSelectedId(p.id)}>
+            <span className="rank">#{i + 1}</span>
+            <span className="name">{p.username}</span>
+            <div className="stats">
+              <span className={`balance ${p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
+              <span className={`pnl-tag ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
+              <span className="record">{p.wins || 0}W / {p.losses || 0}L</span>
+              <span className="avail">avail: {fmt(avail(p))}</span>
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </section>
   )
 }
@@ -834,29 +943,52 @@ function Leaderboard({ players, avail }) {
 function History({ bets, players, undoBet, isAdmin }) {
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const [confirming, setConfirming] = useState(null)
+  const [filterPlayer, setFilterPlayer] = useState('')
 
   function handleUndo(bet) {
     if (confirming === bet.id) { undoBet(bet); setConfirming(null) }
     else setConfirming(bet.id)
   }
 
+  const filtered = filterPlayer
+    ? bets.filter(b => b.player1Id === filterPlayer || b.player2Id === filterPlayer)
+    : bets
+
   return (
     <section>
       <h2>Bet History</h2>
-      {bets.length === 0 && <p className="empty">No settled bets yet.</p>}
-      {bets.map(bet => {
+      <div className="history-filters">
+        <select value={filterPlayer} onChange={e => setFilterPlayer(e.target.value)}>
+          <option value="">All players</option>
+          {players.map(p => <option key={p.id} value={p.id}>{p.username}</option>)}
+        </select>
+      </div>
+      {filtered.length === 0 && <p className="empty">{filterPlayer ? 'No bets for this player.' : 'No settled bets yet.'}</p>}
+      {filtered.map(bet => {
         const winnerName = name(bet.winnerId)
         const winnerTeam = bet.winnerId === bet.player1Id ? bet.team1 : bet.team2
         return (
           <div key={bet.id} className="bet-card settled">
-            <div className="bet-header">
-              <span>{bet.team1} ({bet.player1Odds}) — {name(bet.player1Id)}</span>
-              <span className="vs">vs</span>
-              <span>{bet.team2} ({bet.player2Odds}) — {name(bet.player2Id)}</span>
+            <div className="bet-versus">
+              <div className="bet-player-side">
+                <span className="bet-player-name">{name(bet.player1Id)}</span>
+                <span className={`bet-team ${bet.winnerId === bet.player1Id ? 'own' : ''}`}>{bet.team1}</span>
+                <span className="bet-odds-label">odds {bet.player1Odds}</span>
+              </div>
+              <div className="bet-vs-center">
+                <span className="bet-vs-text">VS</span>
+                <span className="bet-stake-label">stake</span>
+                <span className="bet-stake-val">{fmt(bet.stake)}</span>
+              </div>
+              <div className="bet-player-side right">
+                <span className="bet-player-name">{name(bet.player2Id)}</span>
+                <span className={`bet-team ${bet.winnerId === bet.player2Id ? 'own' : ''}`}>{bet.team2}</span>
+                <span className="bet-odds-label">odds {bet.player2Odds}</span>
+              </div>
             </div>
             <div className="bet-info">
-              Stake: {fmt(bet.stake)} &nbsp;·&nbsp;
               <span className="winner">{winnerName} ({winnerTeam}) won {fmt(bet.payout)}</span>
+              {bet.matchDate && <span> · match {bet.matchDate}</span>}
             </div>
             {isAdmin && (
               <div className="bet-actions">
@@ -874,7 +1006,7 @@ function History({ bets, players, undoBet, isAdmin }) {
 
 // ── Profile ───────────────────────────────────────────────────────────────────
 
-function Profile({ currentPlayer, session, updateUsername, updatePassword, players }) {
+function Profile({ currentPlayer, session, updateUsername, updatePassword, players, settledBets }) {
   const [showDetails, setShowDetails] = useState(false)
   const [newUsername, setNewUsername] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -904,6 +1036,12 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
     setPasswordMsg('Password updated!')
   }
 
+  const myBets = (settledBets || [])
+    .filter(b => b.player1Id === session.playerId || b.player2Id === session.playerId)
+    .slice(0, 8)
+  const name = (id) => players.find(p => p.id === id)?.username ?? '?'
+  const pnl = currentPlayer ? currentPlayer.balance - 50 : 0
+
   return (
     <section>
       <h2>My Profile</h2>
@@ -914,6 +1052,10 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
             <span className={`profile-stat-value ${currentPlayer.balance >= 50 ? 'up' : 'down'}`}>{fmt(currentPlayer.balance)}</span>
           </div>
           <div className="profile-stat">
+            <span className="profile-stat-label">P&L</span>
+            <span className={`profile-stat-value ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
+          </div>
+          <div className="profile-stat">
             <span className="profile-stat-label">Wins</span>
             <span className="profile-stat-value up">{currentPlayer.wins || 0}</span>
           </div>
@@ -921,6 +1063,31 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
             <span className="profile-stat-label">Losses</span>
             <span className="profile-stat-value down">{currentPlayer.losses || 0}</span>
           </div>
+        </div>
+      )}
+
+      {myBets.length > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <h2 style={{ marginBottom: 10 }}>Recent Bets</h2>
+          {myBets.map(bet => {
+            const won = bet.winnerId === session.playerId
+            const myTeam = bet.player1Id === session.playerId ? bet.team1 : bet.team2
+            const oppTeam = bet.player1Id === session.playerId ? bet.team2 : bet.team1
+            const oppName = name(bet.player1Id === session.playerId ? bet.player2Id : bet.player1Id)
+            return (
+              <div key={bet.id} className="bet-card settled">
+                <div className="player-detail-row">
+                  <span className={`bet-team ${won ? 'own' : ''}`}>{myTeam}</span>
+                  <span className="vs">vs</span>
+                  <span className="bet-team">{oppTeam}</span>
+                  <span className="taker-player">{oppName}</span>
+                  <span className={`bet-potential ${won ? 'up' : 'down'}`} style={{ marginLeft: 'auto' }}>
+                    {won ? '+' : '-'}{fmt(bet.payout)}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 

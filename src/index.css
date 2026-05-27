@@ -863,6 +863,64 @@ select option { background: #0d1621 }
   color: #334155;
 }
 
+/* ── Notification dot ── */
+.notif-btn { position: relative }
+
+.notif-dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  background: #ff4655;
+  border-radius: 50%;
+  margin-left: 6px;
+  vertical-align: middle;
+  box-shadow: 0 0 6px #ff465599;
+  position: relative;
+  top: -1px;
+}
+
+/* ── Listing meta ── */
+.listing-time {
+  font-weight: 400;
+  color: #1e2d3d;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+/* ── History filter ── */
+.history-filters {
+  margin-bottom: 14px;
+}
+
+.history-filters select {
+  width: auto;
+  min-width: 160px;
+  padding: 8px 12px;
+  font-size: 0.83rem;
+}
+
+/* ── Leaderboard clickable ── */
+.player-card.clickable {
+  cursor: pointer;
+}
+
+.player-card.clickable:hover {
+  border-color: #39d98a33;
+}
+
+.pnl-tag {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+/* ── Player detail row ── */
+.player-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 /* ── Misc ── */
 h2 {
   font-size: 0.72rem;
