@@ -451,7 +451,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
     const availBal = availableBalance(publisher, activeBets)
     const opponentOdds = listing.publisherSide === 1 ? listing.odds2 : listing.odds1
     const maxStake = availBal / (opponentOdds - 1)
-    if (sv > maxStake + 0.001) {
+    if (sv / 100 > maxStake + 0.001) {
       setEditStakeError(`Max stake is ${fmt(maxStake)} — your available balance of ${fmt(availBal)} can't cover a loss at these odds.`)
     }
   }
@@ -460,7 +460,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
     setTakerStakes(s => ({ ...s, [listingId]: val }))
     setConfirming(null)
     const s = parseFloat(val)
-    if (max !== null && s > max + 0.001) {
+    if (max !== null && s / 100 > max + 0.001) {
       setStakeErrors(e => ({ ...e, [listingId]: `Max stake is ${fmt(max)} based on available funds` }))
     } else {
       setStakeErrors(e => ({ ...e, [listingId]: null }))
@@ -504,7 +504,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
         const takerOdds = listing.publisherSide === 1 ? listing.odds2 : listing.odds1
         const max = isOwn ? null : getMax(listing)
         const takerStake = takerStakes[listing.id] || ''
-        const displayStake = listing.stake ?? parseFloat(takerStake)
+        const displayStake = listing.stake ?? (parseFloat(takerStake) || 0) / 100
         const stakeError = stakeErrors[listing.id]
 
         return (
@@ -570,16 +570,16 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
               <div className="bet-actions">
                 {editingStake === listing.id ? (
                   <>
-                    <input className="inline-input" type="number" step="0.01" min="0" placeholder="Stake (pts)"
+                    <input className="inline-input" type="number" step="1" min="0" placeholder="Stake (pts)"
                       value={editStakeVal} onChange={e => handleEditStakeChange(listing, e.target.value)} />
                     {editStakeError && <p className="stake-error">{editStakeError}</p>}
-                    <button className="edit-save-btn" disabled={!!editStakeError} onClick={async () => { await editListingStake(listing.id, editStakeVal); setEditingStake(null); setEditStakeError('') }}>Save</button>
+                    <button className="edit-save-btn" disabled={!!editStakeError} onClick={async () => { await editListingStake(listing.id, parseFloat(editStakeVal) / 100); setEditingStake(null); setEditStakeError('') }}>Save</button>
                     <button className="edit-btn" onClick={() => { setEditingStake(null); setEditStakeError('') }}>Cancel</button>
                   </>
                 ) : (
                   <>
                     <span className="settle-label">Stake: {listing.stake ? fmt(listing.stake) : 'open'}</span>
-                    <button className="edit-btn" onClick={() => { setEditingStake(listing.id); setEditStakeVal(listing.stake || ''); setEditStakeError('') }}>Edit Stake</button>
+                    <button className="edit-btn" onClick={() => { setEditingStake(listing.id); setEditStakeVal(listing.stake ? listing.stake * 100 : ''); setEditStakeError('') }}>Edit Stake</button>
                     <button
                       className={`undo-btn ${confirming === listing.id ? 'confirming' : ''}`}
                       onClick={() => { if (confirming === listing.id) { cancelListing(listing.id); setConfirming(null) } else setConfirming(listing.id) }}
@@ -593,7 +593,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
               <div className="take-section">
                 {!listing.stake && (
                   <div className="form-group">
-                    <input className="inline-input" type="number" step="0.01" min="0.01"
+                    <input className="inline-input" type="number" step="1" min="1"
                       placeholder={max !== null && max > 0 ? `Enter stake (max ${fmt(max)})` : 'Stake (pts)'}
                       value={takerStake}
                       onChange={e => handleStakeChange(listing.id, e.target.value, max)}
@@ -601,13 +601,13 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
                     {stakeError && <p className="stake-error">{stakeError}</p>}
                   </div>
                 )}
-                {max !== null && max <= 0
-                  ? <p className="stake-error">You don't have enough available funds for this bet.</p>
+                {(max !== null && max <= 0) || (listing.stake != null && max !== null && listing.stake > max + 0.001)
+                  ? <p className="stake-error">You don't have enough available points for this bet.</p>
                   : <button
                       className={`win-btn ${confirming === 'take-' + listing.id ? 'confirming' : ''}`}
                       disabled={!!stakeError || (!listing.stake && (!takerStake || parseFloat(takerStake) <= 0))}
                       onClick={() => {
-                        if (confirming === 'take-' + listing.id) { takeListing(listing, takerStake); setConfirming(null) }
+                        if (confirming === 'take-' + listing.id) { takeListing(listing, (parseFloat(takerStake) || 0) / 100); setConfirming(null) }
                         else setConfirming('take-' + listing.id)
                       }}>
                       {confirming === 'take-' + listing.id ? 'Confirm bet?' : 'Take this bet'}
@@ -646,7 +646,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
     const availBal = availableBalance(currentPlayer, activeBets)
     if (myOdds && theirOdds) {
       const maxForMe = availBal / (theirOdds - 1)
-      if (sv > maxForMe + 0.001) {
+      if (sv / 100 > maxForMe + 0.001) {
         setStakeError(`You can't bet more than ${fmt(maxForMe)} — your available balance of ${fmt(availBal)} can't cover a loss if ${theirTeam} wins.`)
       }
     }
@@ -659,7 +659,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
       gameId, team1: game.team1, team2: game.team2,
       odds1: game.odds1, odds2: game.odds2,
       publisherSide: parseInt(side),
-      stake: s > 0 ? s : null
+      stake: s > 0 ? s / 100 : null
     })
     setGameId(''); setSide(''); setStake(''); setStakeError('')
     setTab('market')
@@ -703,7 +703,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
           <>
             <div className="form-group stake-group">
               <label>Stake — optional, leave blank to decide when someone takes it</label>
-              <input type="number" step="0.01" min="0.01" value={stake}
+              <input type="number" step="1" min="1" value={stake}
                 onChange={e => handleStakeChange(e.target.value)} placeholder="0 pts" />
               {stakeError && <p className="stake-error">{stakeError}</p>}
             </div>
@@ -712,11 +712,11 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
               <div className="payout-preview">
                 <div className="payout-row win">
                   <span>{myTeam} wins</span>
-                  <span>You get <strong>+{fmt(s * (myOdds - 1))}</strong></span>
+                  <span>You get <strong>+{fmt(s / 100 * (myOdds - 1))}</strong></span>
                 </div>
                 <div className="payout-row lose">
                   <span>{theirTeam} wins</span>
-                  <span>You pay <strong>-{fmt(s * (theirOdds - 1))}</strong></span>
+                  <span>You pay <strong>-{fmt(s / 100 * (theirOdds - 1))}</strong></span>
                 </div>
               </div>
             )}
