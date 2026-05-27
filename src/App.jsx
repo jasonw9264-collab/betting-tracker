@@ -430,6 +430,7 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
   const [confirming, setConfirming] = useState(null)
   const [stakeErrors, setStakeErrors] = useState({})
   const [editStakeError, setEditStakeError] = useState('')
+  const [showOthersOnly, setShowOthersOnly] = useState(false)
 
   function getMax(listing) {
     if (!currentPlayer) return null
@@ -478,14 +479,23 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
     )
   }
 
+  const visibleListings = showOthersOnly ? listings.filter(l => l.publisherId !== sessionId) : listings
+
   return (
     <section>
       <div className="market-header">
-        <h2>Market {listings.length > 0 && <span className="count-badge">{listings.length}</span>}</h2>
-        <button className="new-bet-btn" onClick={() => setSubView('new')}>+ New Bet</button>
+        <h2>Market {visibleListings.length > 0 && <span className="count-badge">{visibleListings.length}</span>}</h2>
+        <div className="market-controls">
+          <button className={`filter-btn ${showOthersOnly ? 'active' : ''}`} onClick={() => setShowOthersOnly(v => !v)}>
+            Others only
+          </button>
+          <button className="new-bet-btn" onClick={() => setSubView('new')}>+ New Bet</button>
+        </div>
       </div>
-      {listings.length === 0 && <p className="empty">No open bets yet — be the first to post one.</p>}
-      {listings.map(listing => {
+      {visibleListings.length === 0 && (
+        <p className="empty">{showOthersOnly ? 'No bets from other players.' : 'No open bets yet — be the first to post one.'}</p>
+      )}
+      {visibleListings.map(listing => {
         const isOwn = listing.publisherId === sessionId
         const publisherTeam = listing.publisherSide === 1 ? listing.team1 : listing.team2
         const takerTeam = listing.publisherSide === 1 ? listing.team2 : listing.team1
@@ -499,18 +509,49 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
         return (
           <div key={listing.id} className={`bet-card ${isOwn ? 'own-listing' : ''}`}>
             <div className="listing-badge">{isOwn ? 'Your listing' : `${name(listing.publisherId)}'s bet`}</div>
-            <div className="bet-header">
-              <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span>{name(listing.publisherId)}</span>
-              <span className="vs">vs</span>
-              <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span>{isOwn ? '(open)' : currentPlayer.username}</span>
-            </div>
 
-            {displayStake > 0 && (
-              <div className="bet-info">
-                Stake: {fmt(displayStake)}
-                &nbsp;·&nbsp;{publisherTeam} wins → {name(listing.publisherId)} +{fmt(displayStake * (publisherOdds - 1))}
-                &nbsp;·&nbsp;{takerTeam} wins → {isOwn ? 'taker' : currentPlayer.username} +{fmt(displayStake * (takerOdds - 1))}
-              </div>
+            {isOwn ? (
+              <>
+                <div className="bet-header">
+                  <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span>{name(listing.publisherId)}</span>
+                  <span className="vs">vs</span>
+                  <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span>(open)</span>
+                </div>
+                {listing.stake > 0 && (
+                  <div className="bet-info">
+                    Stake: {fmt(listing.stake)}
+                    &nbsp;·&nbsp;{publisherTeam} wins → you +{fmt(listing.stake * (publisherOdds - 1))}
+                    &nbsp;·&nbsp;{takerTeam} wins → taker +{fmt(listing.stake * (takerOdds - 1))}
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                <div className="taker-matchup">
+                  <div className="taker-side you">
+                    <span className="taker-label">You back</span>
+                    <span><strong>{takerTeam}</strong><span className="odds-tag">{takerOdds}</span></span>
+                  </div>
+                  <span className="vs">vs</span>
+                  <div className="taker-side them">
+                    <span className="taker-label">They back</span>
+                    <span><strong>{publisherTeam}</strong><span className="odds-tag">{publisherOdds}</span></span>
+                    <span className="taker-player">{name(listing.publisherId)}</span>
+                  </div>
+                </div>
+                {displayStake > 0 && (
+                  <div className="payout-preview">
+                    <div className="payout-row win">
+                      <span>{takerTeam} wins</span>
+                      <span>You <strong>+{fmt(displayStake * (takerOdds - 1))}</strong></span>
+                    </div>
+                    <div className="payout-row lose">
+                      <span>{publisherTeam} wins</span>
+                      <span>You <strong>-{fmt(displayStake * (publisherOdds - 1))}</strong></span>
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             {isOwn ? (
