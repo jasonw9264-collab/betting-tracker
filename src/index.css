@@ -15,9 +15,10 @@ body {
   padding: 16px;
 }
 
+/* Header */
 header {
   text-align: center;
-  padding: 24px 0 20px;
+  padding: 24px 0 16px;
 }
 
 h1 {
@@ -25,6 +26,32 @@ h1 {
   color: #4ade80;
   letter-spacing: 2px;
   text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.player-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.9rem;
+  color: #64748b;
+  flex-wrap: wrap;
+}
+
+.player-selector select {
+  padding: 7px 12px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.9rem;
+}
+
+.header-balance {
+  color: #4ade80;
+  font-weight: 700;
+  font-size: 0.9rem;
 }
 
 h2 {
@@ -56,10 +83,7 @@ nav button {
   transition: all 0.15s;
 }
 
-nav button:hover {
-  border-color: #4ade80;
-  color: #4ade80;
-}
+nav button:hover { border-color: #4ade80; color: #4ade80 }
 
 nav button.active {
   background: #4ade80;
@@ -69,6 +93,270 @@ nav button.active {
 }
 
 main { padding-bottom: 48px }
+
+/* Cards */
+.bet-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+
+.bet-card.settled { opacity: 0.65 }
+.bet-card.own-listing { border-color: #4ade8066 }
+
+.listing-badge {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  margin-bottom: 8px;
+}
+
+.own-listing .listing-badge { color: #4ade80 }
+
+.bet-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  font-size: 0.95rem;
+}
+
+.vs { color: #475569; font-size: 0.8rem; font-weight: 600 }
+
+.odds-tag {
+  display: inline-block;
+  background: #0f1117;
+  border: 1px solid #334155;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin: 0 5px;
+}
+
+.bet-info {
+  font-size: 0.82rem;
+  color: #64748b;
+  margin-bottom: 12px;
+  line-height: 1.6;
+}
+
+.winner { color: #4ade80; font-weight: 600 }
+
+.bet-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.settle-label { font-size: 0.8rem; color: #475569 }
+.max-label { font-size: 0.78rem; color: #475569 }
+.error-inline { font-size: 0.82rem; color: #f87171 }
+
+/* Buttons */
+.win-btn {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid #4ade80;
+  color: #4ade80;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.win-btn:hover:not(:disabled), .win-btn.confirming {
+  background: #4ade80;
+  color: #0f1117;
+  font-weight: 700;
+}
+
+.win-btn:disabled { opacity: 0.4; cursor: not-allowed }
+
+.undo-btn {
+  padding: 6px 14px;
+  background: transparent;
+  border: 1px solid #64748b;
+  color: #64748b;
+  border-radius: 7px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: all 0.15s;
+}
+
+.undo-btn:hover, .undo-btn.confirming {
+  border-color: #f87171;
+  color: #f87171;
+  font-weight: 700;
+}
+
+.edit-btn {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid #334155;
+  color: #64748b;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.15s;
+}
+
+.edit-btn:hover { border-color: #94a3b8; color: #94a3b8 }
+
+.edit-save-btn {
+  padding: 5px 12px;
+  background: #4ade80;
+  border: none;
+  color: #0f1117;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.inline-input {
+  padding: 7px 10px;
+  background: #0f1117;
+  border: 1px solid #4ade80;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 0.88rem;
+  width: 120px;
+}
+
+/* Form */
+.bet-form { display: flex; flex-direction: column; gap: 18px }
+
+.form-row { display: flex; gap: 12px; flex-wrap: wrap }
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  min-width: 110px;
+}
+
+.stake-group { max-width: 240px }
+
+label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 600;
+}
+
+input, select {
+  padding: 11px 13px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-size: 0.95rem;
+  width: 100%;
+  transition: border-color 0.15s;
+}
+
+input:focus, select:focus { outline: none; border-color: #4ade80 }
+select option { background: #1e293b }
+
+/* Side picker */
+.side-picker { display: flex; gap: 10px }
+
+.side-btn {
+  flex: 1;
+  padding: 14px;
+  background: #0f1117;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.15s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.side-btn:hover { border-color: #4ade80; color: #e2e8f0 }
+
+.side-btn.selected {
+  border-color: #4ade80;
+  background: #0f2a1a;
+  color: #4ade80;
+}
+
+/* Payout preview */
+.payout-preview {
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #334155;
+}
+
+.payout-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  font-size: 0.9rem;
+}
+
+.payout-row.win { background: #0f2a1a; color: #86efac }
+.payout-row.win strong { color: #4ade80; font-size: 1rem }
+.payout-row.lose { background: #2a0f0f; color: #fca5a5 }
+.payout-row.lose strong { color: #f87171; font-size: 1rem }
+
+.submit-btn {
+  padding: 13px;
+  background: #4ade80;
+  color: #0f1117;
+  border: none;
+  border-radius: 9px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.submit-btn:hover:not(:disabled) { background: #86efac }
+.submit-btn:disabled { background: #1e293b; color: #475569; cursor: not-allowed }
+
+.error {
+  color: #f87171;
+  font-size: 0.88rem;
+  background: #2a0f0f;
+  border: 1px solid #f87171;
+  border-radius: 7px;
+  padding: 9px 13px;
+}
+
+/* Admin password */
+.pw-form {
+  display: flex;
+  gap: 10px;
+  max-width: 300px;
+}
+
+.pw-form input { flex: 1 }
+.pw-form button {
+  padding: 11px 18px;
+  background: #4ade80;
+  color: #0f1117;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
 
 /* Leaderboard */
 .leaderboard { display: flex; flex-direction: column; gap: 10px }
@@ -100,184 +388,9 @@ main { padding-bottom: 48px }
 .up { color: #4ade80 }
 .down { color: #f87171 }
 
-/* Bet cards */
-.bet-card {
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 12px;
-  padding: 16px 18px;
-  margin-bottom: 12px;
-}
-
-.bet-card.settled { opacity: 0.65 }
-
-.bet-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  flex-wrap: wrap;
-  font-size: 0.95rem;
-}
-
-.vs {
-  color: #475569;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
-.bet-info {
-  font-size: 0.82rem;
-  color: #64748b;
-  margin-bottom: 12px;
-  line-height: 1.6;
-}
-
-.winner { color: #4ade80; font-weight: 600 }
-
-.bet-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.settle-label {
-  font-size: 0.8rem;
-  color: #475569;
-  margin-right: 2px;
-}
-
-.win-btn {
-  padding: 7px 14px;
-  background: transparent;
-  border: 1px solid #4ade80;
-  color: #4ade80;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 500;
-  transition: all 0.15s;
-}
-
-.win-btn:hover, .win-btn.confirming {
-  background: #4ade80;
-  color: #0f1117;
-  font-weight: 700;
-}
-
-.undo-btn {
-  padding: 6px 14px;
-  background: transparent;
-  border: 1px solid #64748b;
-  color: #64748b;
-  border-radius: 7px;
-  cursor: pointer;
-  font-size: 0.82rem;
-  transition: all 0.15s;
-}
-
-.undo-btn:hover, .undo-btn.confirming {
-  border-color: #f87171;
-  color: #f87171;
-  font-weight: 700;
-}
-
-/* Form */
-.bet-form { display: flex; flex-direction: column; gap: 18px }
-
-.form-row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-  flex: 1;
-  min-width: 110px;
-}
-
-.stake-group { max-width: 200px }
-
-label {
-  font-size: 0.75rem;
-  color: #64748b;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-weight: 600;
-}
-
-input, select {
-  padding: 11px 13px;
-  background: #1e293b;
-  border: 1px solid #334155;
-  border-radius: 8px;
-  color: #e2e8f0;
-  font-size: 0.95rem;
-  width: 100%;
-  transition: border-color 0.15s;
-}
-
-input:focus, select:focus {
-  outline: none;
-  border-color: #4ade80;
-}
-
-select option { background: #1e293b }
-
-.max-stake-info {
-  background: #0f2a1a;
-  border: 1px solid #4ade80;
-  border-radius: 8px;
-  padding: 11px 15px;
-  font-size: 0.9rem;
-  color: #94a3b8;
-}
-
-.max-stake-info strong { color: #4ade80; font-size: 1rem }
-
-.max-stake-info.no-funds {
-  background: #2a0f0f;
-  border-color: #f87171;
-  color: #f87171;
-}
-
-.submit-btn {
-  padding: 13px;
-  background: #4ade80;
-  color: #0f1117;
-  border: none;
-  border-radius: 9px;
-  font-size: 1rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s;
-}
-
-.submit-btn:hover:not(:disabled) { background: #86efac }
-.submit-btn:disabled { background: #1e293b; color: #475569; cursor: not-allowed }
-
-.error {
-  color: #f87171;
-  font-size: 0.88rem;
-  background: #2a0f0f;
-  border: 1px solid #f87171;
-  border-radius: 7px;
-  padding: 9px 13px;
-}
-
 /* Players tab */
-.add-player-form {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
+.add-player-form { display: flex; gap: 10px; margin-bottom: 16px }
 .add-player-form input { flex: 1 }
-
 .add-player-form button {
   padding: 11px 18px;
   background: #4ade80;
@@ -289,7 +402,6 @@ select option { background: #1e293b }
   font-size: 0.9rem;
   white-space: nowrap;
 }
-
 .add-player-form button:hover { background: #86efac }
 
 .player-row {
@@ -304,12 +416,7 @@ select option { background: #1e293b }
   gap: 10px;
 }
 
-.player-row-right {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-shrink: 0;
-}
+.player-row-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0 }
 
 .edit-name-input {
   flex: 1;
@@ -319,33 +426,6 @@ select option { background: #1e293b }
   border-radius: 6px;
   color: #e2e8f0;
   font-size: 0.95rem;
-}
-
-.edit-btn {
-  padding: 5px 12px;
-  background: transparent;
-  border: 1px solid #334155;
-  color: #64748b;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: all 0.15s;
-}
-
-.edit-btn:hover {
-  border-color: #94a3b8;
-  color: #94a3b8;
-}
-
-.edit-save-btn {
-  padding: 5px 12px;
-  background: #4ade80;
-  border: none;
-  color: #0f1117;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  font-weight: 700;
 }
 
 .empty {
