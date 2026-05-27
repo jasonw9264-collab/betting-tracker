@@ -235,6 +235,14 @@ export default function App() {
   }
 
   async function removeGame(id) { await deleteDoc(doc(db, 'games', id)) }
+
+  async function updateGame(id, fields) {
+    await updateDoc(doc(db, 'games', id), {
+      ...fields,
+      odds1: parseFloat(fields.odds1),
+      odds2: parseFloat(fields.odds2),
+    })
+  }
   async function removePlayer(id) { await deleteDoc(doc(db, 'players', id)) }
 
   // Listings
@@ -399,7 +407,7 @@ export default function App() {
         {tab === 'admin' && (
           <Admin
             games={games} players={players} bets={activeBets}
-            addGame={addGame} removeGame={removeGame} removePlayer={removePlayer}
+            addGame={addGame} removeGame={removeGame} updateGame={updateGame} removePlayer={removePlayer}
             settleBet={settleBet} isAdmin={isAdmin} setIsAdmin={setIsAdmin}
           />
         )}
@@ -834,7 +842,7 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-function Admin({ games, players, bets, addGame, removeGame, removePlayer, settleBet, isAdmin, setIsAdmin }) {
+function Admin({ games, players, bets, addGame, removeGame, updateGame, removePlayer, settleBet, isAdmin, setIsAdmin }) {
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
   const [team1, setTeam1] = useState('')
@@ -844,6 +852,8 @@ function Admin({ games, players, bets, addGame, removeGame, removePlayer, settle
   const [matchDate, setMatchDate] = useState('')
   const [confirmGame, setConfirmGame] = useState(null)
   const [confirmPlayer, setConfirmPlayer] = useState(null)
+  const [editingGame, setEditingGame] = useState(null)
+  const [editFields, setEditFields] = useState({})
 
   function handleLogin(e) {
     e.preventDefault()
@@ -857,9 +867,18 @@ function Admin({ games, players, bets, addGame, removeGame, removePlayer, settle
     setTeam1(''); setOdds1(''); setTeam2(''); setOdds2(''); setMatchDate('')
   }
 
+  function startEditGame(g) {
+    setEditingGame(g.id)
+    setEditFields({ team1: g.team1, odds1: g.odds1, team2: g.team2, odds2: g.odds2, matchDate: g.matchDate || '' })
+  }
+
+  async function saveEditGame(id) {
+    await updateGame(id, editFields)
+    setEditingGame(null)
+  }
+
   const upcomingGames = games.filter(g => !g.matchDate || g.matchDate >= today())
   const pastGames = games.filter(g => g.matchDate && g.matchDate < today())
-  const name = (id) => players.find(p => p.id === id)?.username ?? '?'
 
   if (!isAdmin) {
     return (
@@ -909,12 +928,51 @@ function Admin({ games, players, bets, addGame, removeGame, removePlayer, settle
         <h2 style={{ marginBottom: 12 }}>Upcoming Games</h2>
         {upcomingGames.length === 0 && <p className="empty">No upcoming games.</p>}
         {upcomingGames.map(g => (
-          <div key={g.id} className="player-row">
-            <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}){g.matchDate ? ` — ${g.matchDate}` : ''}</span>
-            <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
-              onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
-              {confirmGame === g.id ? 'Confirm?' : 'Remove'}
-            </button>
+          <div key={g.id} className="game-admin-card">
+            {editingGame === g.id ? (
+              <>
+                <div className="form-row" style={{ marginBottom: 8 }}>
+                  <div className="form-group">
+                    <label>Team 1</label>
+                    <input value={editFields.team1} onChange={e => setEditFields(f => ({ ...f, team1: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Odds</label>
+                    <input type="number" step="0.01" min="1.01" value={editFields.odds1} onChange={e => setEditFields(f => ({ ...f, odds1: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Team 2</label>
+                    <input value={editFields.team2} onChange={e => setEditFields(f => ({ ...f, team2: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Odds</label>
+                    <input type="number" step="0.01" min="1.01" value={editFields.odds2} onChange={e => setEditFields(f => ({ ...f, odds2: e.target.value }))} />
+                  </div>
+                  <div className="form-group">
+                    <label>Date</label>
+                    <input type="date" value={editFields.matchDate} onChange={e => setEditFields(f => ({ ...f, matchDate: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="bet-actions">
+                  <button className="edit-save-btn" onClick={() => saveEditGame(g.id)}>Save</button>
+                  <button className="edit-btn" onClick={() => setEditingGame(null)}>Cancel</button>
+                </div>
+              </>
+            ) : (
+              <div className="game-admin-row">
+                <span className="name">
+                  <strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2})
+                  {g.matchDate ? <span className="game-date"> — {g.matchDate}</span> : ''}
+                </span>
+                <div className="player-row-right">
+                  <button className="edit-btn" onClick={() => startEditGame(g)}>Edit</button>
+                  <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
+                    onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
+                    {confirmGame === g.id ? 'Confirm?' : 'Remove'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -923,12 +981,14 @@ function Admin({ games, players, bets, addGame, removeGame, removePlayer, settle
         <div style={{ marginTop: 24 }}>
           <h2 style={{ marginBottom: 12, color: '#475569' }}>Past Games</h2>
           {pastGames.map(g => (
-            <div key={g.id} className="player-row" style={{ opacity: 0.5 }}>
-              <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}) — {g.matchDate}</span>
-              <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
-                onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
-                {confirmGame === g.id ? 'Confirm?' : 'Remove'}
-              </button>
+            <div key={g.id} className="game-admin-card" style={{ opacity: 0.5 }}>
+              <div className="game-admin-row">
+                <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}) — {g.matchDate}</span>
+                <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
+                  onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
+                  {confirmGame === g.id ? 'Confirm?' : 'Remove'}
+                </button>
+              </div>
             </div>
           ))}
         </div>
