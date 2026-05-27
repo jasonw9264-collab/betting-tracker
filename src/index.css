@@ -97,9 +97,9 @@ h1 {
 
 .nav-secondary button {
   padding: 6px 14px;
-  border: 1px solid transparent;
+  border: 1px solid #1a2535;
   background: transparent;
-  color: #334155;
+  color: #475569;
   border-radius: 7px;
   cursor: pointer;
   font-size: 0.78rem;
@@ -108,8 +108,8 @@ h1 {
   transition: all 0.15s;
 }
 
-.nav-secondary button:hover { color: #64748b }
-.nav-secondary button.active { color: #64748b; border-color: #1a2535; background: #0d1621 }
+.nav-secondary button:hover { color: #94a3b8; border-color: #243447 }
+.nav-secondary button.active { color: #94a3b8; border-color: #334155; background: #0d1621 }
 
 /* ── Cards ── */
 .bet-card {
