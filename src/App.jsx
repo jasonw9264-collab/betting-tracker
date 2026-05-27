@@ -530,25 +530,21 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
               <div className="bet-versus">
                 <div className="bet-player-side">
                   <span className="bet-player-name">You</span>
-                  <span className="bet-team">{publisherTeam}</span>
-                  {listing.stake > 0 && <>
-                    <span className="bet-potential up">+{fmt(listing.stake * (publisherOdds - 1))}</span>
-                    <span className="bet-potential down">-{fmt(listing.stake * (takerOdds - 1))}</span>
-                  </>}
+                  <span className="bet-team own">{publisherTeam}</span>
                   <span className="bet-odds-label">odds {publisherOdds}</span>
                 </div>
                 <div className="bet-vs-center">
                   <span className="bet-vs-text">VS</span>
+                  {listing.stake > 0 && <>
+                    <span className="bet-potential up">+{fmt(listing.stake * (publisherOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(listing.stake * (takerOdds - 1))}</span>
+                  </>}
                   <span className="bet-stake-label">stake</span>
                   <span className="bet-stake-val">{listing.stake ? fmt(listing.stake) : '—'}</span>
                 </div>
                 <div className="bet-player-side right">
                   <span className="bet-player-name">No taker yet</span>
                   <span className="bet-team">{takerTeam}</span>
-                  {listing.stake > 0 && <>
-                    <span className="bet-potential up">+{fmt(listing.stake * (takerOdds - 1))}</span>
-                    <span className="bet-potential down">-{fmt(listing.stake * (publisherOdds - 1))}</span>
-                  </>}
                   <span className="bet-odds-label">odds {takerOdds}</span>
                 </div>
               </div>
@@ -556,25 +552,21 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
               <div className="bet-versus">
                 <div className="bet-player-side">
                   <span className="bet-player-name">You</span>
-                  <span className="bet-team">{takerTeam}</span>
-                  {displayStake > 0 && <>
-                    <span className="bet-potential up">+{fmt(displayStake * (takerOdds - 1))}</span>
-                    <span className="bet-potential down">-{fmt(displayStake * (publisherOdds - 1))}</span>
-                  </>}
+                  <span className="bet-team own">{takerTeam}</span>
                   <span className="bet-odds-label">odds {takerOdds}</span>
                 </div>
                 <div className="bet-vs-center">
                   <span className="bet-vs-text">VS</span>
+                  {displayStake > 0 && <>
+                    <span className="bet-potential up">+{fmt(displayStake * (takerOdds - 1))}</span>
+                    <span className="bet-potential down">-{fmt(displayStake * (publisherOdds - 1))}</span>
+                  </>}
                   <span className="bet-stake-label">stake</span>
                   <span className="bet-stake-val">{displayStake > 0 ? fmt(displayStake) : '?'}</span>
                 </div>
                 <div className="bet-player-side right">
                   <span className="bet-player-name">{name(listing.publisherId)}</span>
                   <span className="bet-team">{publisherTeam}</span>
-                  {displayStake > 0 && <>
-                    <span className="bet-potential up">+{fmt(displayStake * (publisherOdds - 1))}</span>
-                    <span className="bet-potential down">-{fmt(displayStake * (takerOdds - 1))}</span>
-                  </>}
                   <span className="bet-odds-label">odds {publisherOdds}</span>
                 </div>
               </div>

@@ -849,6 +849,10 @@ select option { background: #0d1621 }
   color: #e2e8f0;
 }
 
+.bet-team.own {
+  color: #39d98a;
+}
+
 .bet-potential {
   font-size: 0.88rem;
   font-weight: 700;
