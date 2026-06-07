@@ -256,10 +256,9 @@ export default function App() {
   const avail = (p) => availableBalance(p, activeBets)
 
   // Games
-  async function addGame(team1, odds1, team2, odds2, matchDate) {
+  async function addGame(team1, team2, matchDate) {
     await addDoc(collection(db, 'games'), {
-      team1, odds1: parseFloat(odds1), team2, odds2: parseFloat(odds2),
-      matchDate, createdAt: serverTimestamp()
+      team1, team2, matchDate, createdAt: serverTimestamp()
     })
   }
 
@@ -267,9 +266,9 @@ export default function App() {
 
   async function updateGame(id, fields) {
     await updateDoc(doc(db, 'games', id), {
-      ...fields,
-      odds1: parseFloat(fields.odds1),
-      odds2: parseFloat(fields.odds2),
+      team1: fields.team1,
+      team2: fields.team2,
+      matchDate: fields.matchDate,
     })
   }
   async function removePlayer(id) { await deleteDoc(doc(db, 'players', id)) }
@@ -660,14 +659,18 @@ function Market({ listings, players, currentPlayer, activeBets, games, publishLi
 function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, backLabel }) {
   const [gameId, setGameId] = useState('')
   const [side, setSide] = useState('')
+  const [odds1, setOdds1] = useState('')
+  const [odds2, setOdds2] = useState('')
   const [stake, setStake] = useState('')
   const [stakeError, setStakeError] = useState('')
 
   const upcomingGames = games.filter(g => !g.matchDate || g.matchDate >= today())
   const game = upcomingGames.find(g => g.id === gameId)
-  const myOdds = game ? (side === '1' ? game.odds1 : game.odds2) : null
+  const o1 = parseFloat(odds1)
+  const o2 = parseFloat(odds2)
+  const myOdds = side && o1 > 1 && o2 > 1 ? (side === '1' ? o1 : o2) : null
   const myTeam = game ? (side === '1' ? game.team1 : game.team2) : null
-  const theirOdds = game ? (side === '1' ? game.odds2 : game.odds1) : null
+  const theirOdds = side && o1 > 1 && o2 > 1 ? (side === '1' ? o2 : o1) : null
   const theirTeam = game ? (side === '1' ? game.team2 : game.team1) : null
   const s = parseFloat(stake)
 
@@ -687,15 +690,15 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
 
   async function handleSubmit(e) {
     e.preventDefault()
-    if (!currentPlayer || !game || !side || stakeError) return
+    if (!currentPlayer || !game || !side || stakeError || !(o1 > 1) || !(o2 > 1)) return
     await publishListing({
       gameId, team1: game.team1, team2: game.team2,
-      odds1: game.odds1, odds2: game.odds2,
+      odds1: o1, odds2: o2,
       publisherSide: parseInt(side),
       stake: s > 0 ? s / 100 : null,
       matchDate: game.matchDate || null
     })
-    setGameId(''); setSide(''); setStake(''); setStakeError('')
+    setGameId(''); setSide(''); setOdds1(''); setOdds2(''); setStake(''); setStakeError('')
     setTab('market')
   }
 
@@ -709,28 +712,40 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
       <form className="bet-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label>Select Game</label>
-          <select value={gameId} onChange={e => { setGameId(e.target.value); setSide(''); setStake(''); setStakeError('') }} required>
+          <select value={gameId} onChange={e => { setGameId(e.target.value); setSide(''); setOdds1(''); setOdds2(''); setStake(''); setStakeError('') }} required>
             <option value="">Choose a game...</option>
             {upcomingGames.map(g => (
               <option key={g.id} value={g.id}>
-                {g.team1} ({g.odds1}) vs {g.team2} ({g.odds2}){g.matchDate ? ` — ${g.matchDate}` : ''}
+                {g.team1} vs {g.team2}{g.matchDate ? ` — ${g.matchDate}` : ''}
               </option>
             ))}
           </select>
         </div>
 
         {game && (
-          <div className="form-group">
-            <label>I'm backing</label>
-            <div className="side-picker">
-              <button type="button" className={`side-btn ${side === '1' ? 'selected' : ''}`} onClick={() => { setSide('1'); setStake(''); setStakeError('') }}>
-                {game.team1}<span className="odds-tag">{game.odds1}</span>
-              </button>
-              <button type="button" className={`side-btn ${side === '2' ? 'selected' : ''}`} onClick={() => { setSide('2'); setStake(''); setStakeError('') }}>
-                {game.team2}<span className="odds-tag">{game.odds2}</span>
-              </button>
+          <>
+            <div className="form-row">
+              <div className="form-group">
+                <label>{game.team1} odds</label>
+                <input type="number" step="0.01" min="1.01" value={odds1} onChange={e => { setOdds1(e.target.value); setStakeError('') }} placeholder="e.g. 1.50" required />
+              </div>
+              <div className="form-group">
+                <label>{game.team2} odds</label>
+                <input type="number" step="0.01" min="1.01" value={odds2} onChange={e => { setOdds2(e.target.value); setStakeError('') }} placeholder="e.g. 1.80" required />
+              </div>
             </div>
-          </div>
+            <div className="form-group">
+              <label>I'm backing</label>
+              <div className="side-picker">
+                <button type="button" className={`side-btn ${side === '1' ? 'selected' : ''}`} onClick={() => { setSide('1'); setStake(''); setStakeError('') }}>
+                  {game.team1}<span className="odds-tag">{odds1 || '?'}</span>
+                </button>
+                <button type="button" className={`side-btn ${side === '2' ? 'selected' : ''}`} onClick={() => { setSide('2'); setStake(''); setStakeError('') }}>
+                  {game.team2}<span className="odds-tag">{odds2 || '?'}</span>
+                </button>
+              </div>
+            </div>
+          </>
         )}
 
         {side && game && (
@@ -755,7 +770,7 @@ function NewBet({ games, currentPlayer, activeBets, publishListing, setTab, back
               </div>
             )}
 
-            <button type="submit" className="submit-btn" disabled={!!stakeError}>
+            <button type="submit" className="submit-btn" disabled={!!stakeError || !(o1 > 1) || !(o2 > 1)}>
               Publish to Market
             </button>
           </>
@@ -1136,9 +1151,7 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
   const [team1, setTeam1] = useState('')
-  const [odds1, setOdds1] = useState('')
   const [team2, setTeam2] = useState('')
-  const [odds2, setOdds2] = useState('')
   const [matchDate, setMatchDate] = useState('')
   const [confirmGame, setConfirmGame] = useState(null)
   const [confirmPlayer, setConfirmPlayer] = useState(null)
@@ -1155,13 +1168,13 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
 
   async function handleAddGame(e) {
     e.preventDefault()
-    await addGame(team1.trim(), odds1, team2.trim(), odds2, matchDate)
-    setTeam1(''); setOdds1(''); setTeam2(''); setOdds2(''); setMatchDate('')
+    await addGame(team1.trim(), team2.trim(), matchDate)
+    setTeam1(''); setTeam2(''); setMatchDate('')
   }
 
   function startEditGame(g) {
     setEditingGame(g.id)
-    setEditFields({ team1: g.team1, odds1: g.odds1, team2: g.team2, odds2: g.odds2, matchDate: g.matchDate || '' })
+    setEditFields({ team1: g.team1, team2: g.team2, matchDate: g.matchDate || '' })
   }
 
   async function saveEditGame(id) {
@@ -1197,16 +1210,8 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
             <input value={team1} onChange={e => setTeam1(e.target.value)} placeholder="e.g. LEV" required />
           </div>
           <div className="form-group">
-            <label>Odds</label>
-            <input type="number" step="0.01" min="1.01" value={odds1} onChange={e => setOdds1(e.target.value)} placeholder="1.30" required />
-          </div>
-          <div className="form-group">
             <label>Team 2</label>
             <input value={team2} onChange={e => setTeam2(e.target.value)} placeholder="e.g. GE" required />
-          </div>
-          <div className="form-group">
-            <label>Odds</label>
-            <input type="number" step="0.01" min="1.01" value={odds2} onChange={e => setOdds2(e.target.value)} placeholder="1.80" required />
           </div>
           <div className="form-group">
             <label>Match Date</label>
@@ -1229,16 +1234,8 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
                     <input value={editFields.team1} onChange={e => setEditFields(f => ({ ...f, team1: e.target.value }))} />
                   </div>
                   <div className="form-group">
-                    <label>Odds</label>
-                    <input type="number" step="0.01" min="1.01" value={editFields.odds1} onChange={e => setEditFields(f => ({ ...f, odds1: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
                     <label>Team 2</label>
                     <input value={editFields.team2} onChange={e => setEditFields(f => ({ ...f, team2: e.target.value }))} />
-                  </div>
-                  <div className="form-group">
-                    <label>Odds</label>
-                    <input type="number" step="0.01" min="1.01" value={editFields.odds2} onChange={e => setEditFields(f => ({ ...f, odds2: e.target.value }))} />
                   </div>
                   <div className="form-group">
                     <label>Date</label>
@@ -1253,7 +1250,7 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
             ) : (
               <div className="game-admin-row">
                 <span className="name">
-                  <strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2})
+                  <strong>{g.team1}</strong> vs <strong>{g.team2}</strong>
                   {g.matchDate ? <span className="game-date"> — {g.matchDate}</span> : ''}
                 </span>
                 <div className="player-row-right">
@@ -1275,7 +1272,7 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
           {pastGames.map(g => (
             <div key={g.id} className="game-admin-card" style={{ opacity: 0.5 }}>
               <div className="game-admin-row">
-                <span className="name"><strong>{g.team1}</strong> ({g.odds1}) vs <strong>{g.team2}</strong> ({g.odds2}) — {g.matchDate}</span>
+                <span className="name"><strong>{g.team1}</strong> vs <strong>{g.team2}</strong> — {g.matchDate}</span>
                 <button className={`undo-btn ${confirmGame === g.id ? 'confirming' : ''}`}
                   onClick={() => { if (confirmGame === g.id) { removeGame(g.id); setConfirmGame(null) } else setConfirmGame(g.id) }}>
                   {confirmGame === g.id ? 'Confirm?' : 'Remove'}
