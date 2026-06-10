@@ -376,6 +376,11 @@ export default function App() {
     await updateDoc(doc(db, 'players', session.playerId), { passwordHash: hash })
   }
 
+  async function resetPlayerPassword(playerId, newPassword) {
+    const hash = await hashPassword(newPassword)
+    await updateDoc(doc(db, 'players', playerId), { passwordHash: hash })
+  }
+
   return (
     <div className="app">
       <header>
@@ -449,6 +454,7 @@ export default function App() {
             addGame={addGame} removeGame={removeGame} updateGame={updateGame} removePlayer={removePlayer}
             settleBet={settleBet} isAdmin={isAdmin} setIsAdmin={setIsAdmin}
             updatePlayerUsername={updatePlayerUsername}
+            resetPlayerPassword={resetPlayerPassword}
           />
         )}
       </main>
@@ -1147,9 +1153,10 @@ function Profile({ currentPlayer, session, updateUsername, updatePassword, playe
 
 // ── Admin ─────────────────────────────────────────────────────────────────────
 
-function Admin({ games, players, bets, addGame, removeGame, updateGame, removePlayer, settleBet, isAdmin, setIsAdmin, updatePlayerUsername }) {
+function Admin({ games, players, bets, addGame, removeGame, updateGame, removePlayer, settleBet, isAdmin, setIsAdmin, updatePlayerUsername, resetPlayerPassword }) {
   const [pw, setPw] = useState('')
   const [pwError, setPwError] = useState(false)
+  const [adminSubTab, setAdminSubTab] = useState('overview')
   const [team1, setTeam1] = useState('')
   const [team2, setTeam2] = useState('')
   const [matchDate, setMatchDate] = useState('')
@@ -1159,6 +1166,9 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
   const [editFields, setEditFields] = useState({})
   const [editingUsername, setEditingUsername] = useState(null)
   const [editUsernameVal, setEditUsernameVal] = useState('')
+  const [resettingPassword, setResettingPassword] = useState(null)
+  const [resetPwVal, setResetPwVal] = useState('')
+  const [resetPwMsg, setResetPwMsg] = useState('')
 
   function handleLogin(e) {
     e.preventDefault()
@@ -1198,9 +1208,50 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
     )
   }
 
+  async function handleResetPassword(playerId) {
+    if (!resetPwVal || resetPwVal.length < 3) { setResetPwMsg('Min 3 characters.'); return }
+    await resetPlayerPassword(playerId, resetPwVal)
+    setResettingPassword(null)
+    setResetPwVal('')
+    setResetPwMsg('')
+  }
+
   return (
     <section>
       <div className="admin-unlocked-badge">Admin Unlocked</div>
+
+      <div className="admin-sub-tabs">
+        <button className={adminSubTab === 'overview' ? 'active' : ''} onClick={() => setAdminSubTab('overview')}>Overview</button>
+        <button className={adminSubTab === 'credentials' ? 'active' : ''} onClick={() => setAdminSubTab('credentials')}>Credentials</button>
+      </div>
+
+      {adminSubTab === 'credentials' && (
+        <div style={{ marginTop: 16 }}>
+          <h2>Player Credentials</h2>
+          <p className="admin-note" style={{ marginBottom: 16 }}>Passwords are stored as SHA-256 hashes and cannot be reversed. Use Reset to set a new password for a player.</p>
+          {players.length === 0 && <p className="empty">No players.</p>}
+          {players.map(p => (
+            <div key={p.id} className="player-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+              <div style={{ display: 'flex', width: '100%', alignItems: 'center', gap: 8 }}>
+                <span className="name" style={{ minWidth: 100 }}>{p.username}</span>
+                <span className="listing-time" style={{ flex: 1, wordBreak: 'break-all', fontSize: '0.7rem' }}>{p.passwordHash || '—'}</span>
+                <button className="edit-btn" onClick={() => { setResettingPassword(p.id); setResetPwVal(''); setResetPwMsg('') }}>Reset PW</button>
+              </div>
+              {resettingPassword === p.id && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingLeft: 4 }}>
+                  <input className="inline-input" type="password" placeholder="New password (min 3)" value={resetPwVal}
+                    onChange={e => { setResetPwVal(e.target.value); setResetPwMsg('') }} autoFocus />
+                  <button className="edit-save-btn" onClick={() => handleResetPassword(p.id)}>Save</button>
+                  <button className="edit-btn" onClick={() => { setResettingPassword(null); setResetPwMsg('') }}>Cancel</button>
+                  {resetPwMsg && <span className="error" style={{ fontSize: '0.8rem' }}>{resetPwMsg}</span>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {adminSubTab === 'overview' && <>
 
       <h2>Add Game</h2>
       <form className="bet-form" onSubmit={handleAddGame}>
@@ -1317,6 +1368,8 @@ function Admin({ games, players, bets, addGame, removeGame, updateGame, removePl
           </div>
         ))}
       </div>
+
+      </>}
     </section>
   )
 }

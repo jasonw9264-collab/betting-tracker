@@ -712,8 +712,32 @@ select option { background: #0d1621 }
   letter-spacing: 1.5px;
   padding: 5px 12px;
   border-radius: 6px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
+
+.admin-sub-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 0;
+}
+
+.admin-sub-tabs button {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.admin-sub-tabs button:hover { color: #e2e8f0 }
+.admin-sub-tabs button.active { color: #e2e8f0; border-bottom-color: #ff4655 }
 
 .game-admin-card {
   background: #0d1621;
