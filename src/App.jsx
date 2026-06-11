@@ -942,13 +942,19 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
       {sorted.length === 0 && <p className="empty">No players yet.</p>}
       {sorted.map((p, i) => {
         const pnl = p.balance - 50
+        const isBase = Math.abs(pnl) < 0.001
+        const barFill = isBase ? 60 : Math.min(Math.abs(pnl) / 50 * 60, 60)
+        const barColor = isBase ? '#44445e' : pnl > 0 ? '#39d98a' : '#ff4655'
         return (
           <div key={p.id} className="player-card clickable" onClick={() => setSelectedId(p.id)}>
             <span className="rank">#{i + 1}</span>
             <span className="name">{p.username}</span>
             <div className="stats">
-              <span className={`balance ${p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
-              <span className={`pnl-tag ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
+              <span className={`balance ${isBase ? 'neutral' : pnl > 0 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
+              <div className="balance-bar-track">
+                <div style={{ width: barFill, height: '100%', background: barColor, borderRadius: 2 }} />
+              </div>
+              <span className={`pnl-tag ${isBase ? 'neutral' : pnl > 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
               <span className="record">{p.wins || 0}W / {p.losses || 0}L</span>
               <span className="avail">avail: {fmt(avail(p))}</span>
             </div>
