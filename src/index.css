@@ -2,8 +2,8 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #080b10;
-  color: #e2e8f0;
+  background: #000000;
+  color: #e8e8f0;
   min-height: 100vh;
 }
 
@@ -32,7 +32,7 @@ h1 {
   font-weight: 800;
   letter-spacing: 1px;
   text-transform: uppercase;
-  background: linear-gradient(90deg, #fff 0%, #94a3b8 100%);
+  background: linear-gradient(90deg, #ffffff 0%, #a0a0c0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -56,7 +56,7 @@ h1 {
 
 .header-info { display: flex; flex-direction: column; align-items: flex-end; gap: 1px }
 
-.header-username { font-weight: 700; color: #f1f5f9; font-size: 0.88rem }
+.header-username { font-weight: 700; color: #f0f0f8; font-size: 0.88rem }
 .header-balance { color: #39d98a; font-weight: 600; font-size: 0.78rem }
 
 /* ── Nav ── */
@@ -69,10 +69,10 @@ h1 {
 .nav-primary button {
   flex: 1;
   padding: 12px 20px;
-  border: 1px solid #1a2535;
-  background: #0d1621;
-  color: #64748b;
-  border-radius: 10px;
+  border: 1px solid #1d1d27;
+  background: #111117;
+  color: #505068;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -80,13 +80,13 @@ h1 {
   letter-spacing: 0.3px;
 }
 
-.nav-primary button:hover { border-color: #39d98a33; color: #94a3b8 }
+.nav-primary button:hover { border-color: #39d98a22; color: #8888a0 }
 
 .nav-primary button.active {
   background: linear-gradient(135deg, #39d98a15, #39d98a08);
   border-color: #39d98a55;
   color: #39d98a;
-  box-shadow: 0 0 12px #39d98a18;
+  box-shadow: 0 0 14px #39d98a15;
 }
 
 .nav-secondary {
@@ -96,41 +96,42 @@ h1 {
 }
 
 .nav-secondary button {
-  padding: 6px 14px;
-  border: 1px solid #1a2535;
-  background: transparent;
-  color: #475569;
-  border-radius: 7px;
+  flex: 1;
+  padding: 12px 20px;
+  border: 1px solid #1d1d27;
+  background: #111117;
+  color: #404058;
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 0.78rem;
-  font-weight: 500;
+  font-size: 0.9rem;
+  font-weight: 600;
   letter-spacing: 0.3px;
   transition: all 0.15s;
 }
 
-.nav-secondary button:hover { color: #94a3b8; border-color: #243447 }
-.nav-secondary button.active { color: #94a3b8; border-color: #334155; background: #0d1621 }
+.nav-secondary button:hover { color: #8888a0; border-color: #2d2d3f }
+.nav-secondary button.active { color: #8888a0; border-color: #2d2d3f; background: #16161f }
 
 /* ── Cards ── */
 .bet-card {
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 14px;
-  padding: 18px 20px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 18px;
+  padding: 20px 22px;
   margin-bottom: 10px;
   transition: border-color 0.2s;
 }
 
-.bet-card:hover { border-color: #243447 }
-.bet-card.settled { opacity: 0.55 }
-.bet-card.own-listing { border-color: #39d98a22; background: linear-gradient(135deg, #0d1621, #0d1f18) }
+.bet-card:hover { border-color: #2d2d3f }
+.bet-card.settled { border-color: #191920 }
+.bet-card.own-listing { border-color: #39d98a22; background: linear-gradient(135deg, #111117, #0f1a14) }
 
 .listing-badge {
   font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 1px;
-  color: #334155;
+  color: #303048;
   margin-bottom: 10px;
 }
 
@@ -146,7 +147,7 @@ h1 {
 }
 
 .vs {
-  color: #1e2d3d;
+  color: #252535;
   font-size: 0.75rem;
   font-weight: 800;
   letter-spacing: 1px;
@@ -154,9 +155,9 @@ h1 {
 
 .odds-tag {
   display: inline-block;
-  background: #111c2a;
-  border: 1px solid #1a2535;
-  color: #64748b;
+  background: #16161f;
+  border: 1px solid #1d1d27;
+  color: #505068;
   font-size: 0.7rem;
   padding: 2px 6px;
   border-radius: 4px;
@@ -166,7 +167,7 @@ h1 {
 
 .bet-info {
   font-size: 0.8rem;
-  color: #334155;
+  color: #303048;
   margin-bottom: 12px;
   line-height: 1.6;
 }
@@ -180,8 +181,8 @@ h1 {
   flex-wrap: wrap;
 }
 
-.settle-label { font-size: 0.78rem; color: #334155 }
-.max-label { font-size: 0.75rem; color: #334155 }
+.settle-label { font-size: 0.78rem; color: #303048 }
+.max-label { font-size: 0.75rem; color: #303048 }
 .error-inline { font-size: 0.8rem; color: #ff4655 }
 
 /* ── Market header ── */
@@ -197,8 +198,8 @@ h1 {
 .filter-btn {
   padding: 7px 12px;
   background: transparent;
-  border: 1px solid #1a2535;
-  color: #475569;
+  border: 1px solid #1d1d27;
+  color: #404058;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.78rem;
@@ -206,8 +207,8 @@ h1 {
   transition: all 0.15s;
 }
 
-.filter-btn:hover:not(.active) { border-color: #243447; color: #64748b }
-.filter-btn.active { background: #111c2a; border-color: #39d98a44; color: #39d98a }
+.filter-btn:hover:not(.active) { border-color: #2d2d3f; color: #505068 }
+.filter-btn.active { background: #16161f; border-color: #39d98a44; color: #39d98a }
 
 /* ── Taker card ── */
 .taker-matchup {
@@ -233,11 +234,11 @@ h1 {
 }
 
 .taker-side.you .taker-label { color: #39d98a99 }
-.taker-side.them .taker-label { color: #334155 }
+.taker-side.them .taker-label { color: #303048 }
 
 .taker-player {
   font-size: 0.75rem;
-  color: #475569;
+  color: #404058;
 }
 
 .count-badge {
@@ -258,8 +259,8 @@ h1 {
   padding: 9px 18px;
   background: linear-gradient(135deg, #39d98a, #22c55e);
   border: none;
-  color: #080b10;
-  border-radius: 9px;
+  color: #000000;
+  border-radius: 10px;
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 700;
@@ -284,7 +285,7 @@ h1 {
 
 .win-btn:hover:not(:disabled), .win-btn.confirming {
   background: #39d98a;
-  color: #080b10;
+  color: #000000;
   border-color: #39d98a;
 }
 
@@ -293,8 +294,8 @@ h1 {
 .undo-btn {
   padding: 7px 13px;
   background: transparent;
-  border: 1px solid #1a2535;
-  color: #334155;
+  border: 1px solid #1d1d27;
+  color: #303048;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -309,21 +310,21 @@ h1 {
 .edit-btn {
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid #1a2535;
-  color: #475569;
+  border: 1px solid #1d1d27;
+  color: #404058;
   border-radius: 7px;
   cursor: pointer;
   font-size: 0.78rem;
   transition: all 0.15s;
 }
 
-.edit-btn:hover { border-color: #243447; color: #64748b }
+.edit-btn:hover { border-color: #2d2d3f; color: #505068 }
 
 .edit-save-btn {
   padding: 6px 14px;
   background: #39d98a;
   border: none;
-  color: #080b10;
+  color: #000000;
   border-radius: 7px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -335,8 +336,8 @@ h1 {
 .signout-btn {
   padding: 7px 14px;
   background: transparent;
-  border: 1px solid #1a2535;
-  color: #334155;
+  border: 1px solid #1d1d27;
+  color: #303048;
   border-radius: 8px;
   cursor: pointer;
   font-size: 0.8rem;
@@ -363,10 +364,10 @@ h1 {
 
 .inline-input {
   padding: 8px 11px;
-  background: #111c2a;
-  border: 1px solid #1a2535;
-  border-radius: 7px;
-  color: #e2e8f0;
+  background: #16161f;
+  border: 1px solid #1d1d27;
+  border-radius: 8px;
+  color: #e8e8f0;
   font-size: 0.85rem;
   width: 130px;
   transition: border-color 0.15s;
@@ -390,7 +391,7 @@ h1 {
 
 label {
   font-size: 0.7rem;
-  color: #334155;
+  color: #303048;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 700;
@@ -398,17 +399,17 @@ label {
 
 input, select {
   padding: 11px 13px;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 9px;
-  color: #e2e8f0;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 10px;
+  color: #e8e8f0;
   font-size: 0.92rem;
   width: 100%;
   transition: border-color 0.15s;
 }
 
 input:focus, select:focus { outline: none; border-color: #39d98a55 }
-select option { background: #0d1621 }
+select option { background: #111117 }
 
 /* ── Side picker ── */
 .side-picker { display: flex; gap: 10px }
@@ -416,10 +417,10 @@ select option { background: #0d1621 }
 .side-btn {
   flex: 1;
   padding: 16px;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 12px;
-  color: #475569;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
+  color: #404058;
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 700;
@@ -430,20 +431,20 @@ select option { background: #0d1621 }
   gap: 8px;
 }
 
-.side-btn:hover { border-color: #243447; color: #94a3b8 }
+.side-btn:hover { border-color: #2d2d3f; color: #8888a0 }
 
 .side-btn.selected {
   border-color: #39d98a55;
-  background: linear-gradient(135deg, #0d1f18, #0d1621);
+  background: linear-gradient(135deg, #0f1a14, #111117);
   color: #39d98a;
   box-shadow: 0 0 16px #39d98a0d;
 }
 
 /* ── Payout preview ── */
 .payout-preview {
-  border-radius: 12px;
+  border-radius: 14px;
   overflow: hidden;
-  border: 1px solid #1a2535;
+  border: 1px solid #1d1d27;
 }
 
 .payout-row {
@@ -454,17 +455,17 @@ select option { background: #0d1621 }
   font-size: 0.88rem;
 }
 
-.payout-row.win { background: #0d1f18; color: #6ee7b7 }
+.payout-row.win { background: #0d1812; color: #6ee7b7 }
 .payout-row.win strong { color: #39d98a; font-size: 1rem }
-.payout-row.lose { background: #1a0d10; color: #fca5a5 }
+.payout-row.lose { background: #1a0a0d; color: #fca5a5 }
 .payout-row.lose strong { color: #ff4655; font-size: 1rem }
 
 .submit-btn {
   padding: 13px;
   background: linear-gradient(135deg, #39d98a, #22c55e);
-  color: #080b10;
+  color: #000000;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 0.95rem;
   font-weight: 800;
   cursor: pointer;
@@ -473,12 +474,12 @@ select option { background: #0d1621 }
 }
 
 .submit-btn:hover:not(:disabled) { opacity: 0.9; transform: translateY(-1px) }
-.submit-btn:disabled { background: #0d1621; color: #334155; cursor: not-allowed; transform: none }
+.submit-btn:disabled { background: #111117; color: #303048; cursor: not-allowed; transform: none }
 
 .error {
   color: #ff4655;
   font-size: 0.85rem;
-  background: #1a0d10;
+  background: #1a0a0d;
   border: 1px solid #ff465533;
   border-radius: 8px;
   padding: 9px 13px;
@@ -500,22 +501,22 @@ select option { background: #0d1621 }
   display: flex;
   align-items: center;
   gap: 14px;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 14px;
-  padding: 16px 20px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 18px;
+  padding: 18px 22px;
   transition: border-color 0.2s;
 }
 
-.player-card:hover { border-color: #243447 }
+.player-card:hover { border-color: #2d2d3f }
 
-.rank { color: #1e2d3d; font-size: 0.9rem; width: 28px; flex-shrink: 0; font-weight: 800 }
-.name { font-weight: 600; font-size: 0.98rem; flex: 1 }
+.rank { color: #252535; font-size: 1rem; width: 28px; flex-shrink: 0; font-weight: 800 }
+.name { font-weight: 700; font-size: 1.05rem; flex: 1 }
 
 .stats { display: flex; flex-direction: column; align-items: flex-end; gap: 3px }
-.balance { font-size: 1.1rem; font-weight: 700 }
-.record { font-size: 0.72rem; color: #334155 }
-.avail { font-size: 0.7rem; color: #243447 }
+.balance { font-size: 1.2rem; font-weight: 800 }
+.record { font-size: 0.72rem; color: #303048 }
+.avail { font-size: 0.7rem; color: #222232 }
 
 .up { color: #39d98a }
 .down { color: #ff4655 }
@@ -524,10 +525,10 @@ select option { background: #0d1621 }
 .gear-wrapper { position: relative }
 
 .gear-btn {
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 9px;
-  color: #334155;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 10px;
+  color: #303048;
   width: 38px;
   height: 38px;
   display: flex;
@@ -538,7 +539,7 @@ select option { background: #0d1621 }
   transition: all 0.15s;
 }
 
-.gear-btn:hover { border-color: #243447; color: #64748b }
+.gear-btn:hover { border-color: #2d2d3f; color: #505068 }
 
 .admin-dot {
   position: absolute;
@@ -555,13 +556,13 @@ select option { background: #0d1621 }
   position: absolute;
   top: calc(100% + 6px);
   right: 0;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 12px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
   overflow: hidden;
   min-width: 160px;
   z-index: 100;
-  box-shadow: 0 16px 40px rgba(0,0,0,0.6);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.8);
 }
 
 .gear-dropdown button {
@@ -572,14 +573,14 @@ select option { background: #0d1621 }
   padding: 12px 16px;
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #8888a0;
   font-size: 0.88rem;
   cursor: pointer;
   text-align: left;
   transition: background 0.15s;
 }
 
-.gear-dropdown button:hover { background: #111c2a; color: #e2e8f0 }
+.gear-dropdown button:hover { background: #16161f; color: #e8e8f0 }
 
 .admin-badge {
   font-size: 0.65rem;
@@ -603,10 +604,10 @@ select option { background: #0d1621 }
 .auth-tabs button {
   flex: 1;
   padding: 11px;
-  border: 1px solid #1a2535;
-  background: #0d1621;
-  color: #475569;
-  border-radius: 10px;
+  border: 1px solid #1d1d27;
+  background: #111117;
+  color: #404058;
+  border-radius: 12px;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -630,10 +631,10 @@ select option { background: #0d1621 }
 
 .profile-stat {
   flex: 1;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 12px;
-  padding: 16px 12px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
+  padding: 18px 12px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -642,13 +643,13 @@ select option { background: #0d1621 }
 
 .profile-stat-label {
   font-size: 0.68rem;
-  color: #334155;
+  color: #303048;
   text-transform: uppercase;
   letter-spacing: 1px;
   font-weight: 700;
 }
 
-.profile-stat-value { font-size: 1.2rem; font-weight: 800 }
+.profile-stat-value { font-size: 1.25rem; font-weight: 800 }
 
 .details-toggle {
   width: 100%;
@@ -656,10 +657,10 @@ select option { background: #0d1621 }
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 12px;
-  color: #64748b;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
+  color: #505068;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -667,13 +668,13 @@ select option { background: #0d1621 }
   transition: all 0.15s;
 }
 
-.details-toggle:hover { border-color: #243447; color: #94a3b8 }
-.toggle-arrow { font-size: 0.7rem; color: #334155 }
+.details-toggle:hover { border-color: #2d2d3f; color: #8888a0 }
+.toggle-arrow { font-size: 0.7rem; color: #303048 }
 
 .details-panel {
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 12px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
   padding: 20px;
   margin-top: 4px;
   display: flex;
@@ -683,7 +684,7 @@ select option { background: #0d1621 }
 
 .profile-section h3 {
   font-size: 0.78rem;
-  color: #334155;
+  color: #303048;
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 12px;
@@ -693,17 +694,17 @@ select option { background: #0d1621 }
 /* ── Admin ── */
 .admin-note {
   font-size: 0.8rem;
-  color: #334155;
+  color: #303048;
   margin-bottom: 14px;
   padding: 10px 14px;
-  background: #0d1621;
-  border-radius: 9px;
-  border-left: 3px solid #1a2535;
+  background: #111117;
+  border-radius: 10px;
+  border-left: 3px solid #1d1d27;
 }
 
 .admin-unlocked-badge {
   display: inline-block;
-  background: #0d1f18;
+  background: #0f1a14;
   border: 1px solid #39d98a33;
   color: #39d98a;
   font-size: 0.68rem;
@@ -719,14 +720,14 @@ select option { background: #0d1621 }
   display: flex;
   gap: 4px;
   margin-bottom: 24px;
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid #1d1d27;
   padding-bottom: 0;
 }
 
 .admin-sub-tabs button {
   background: none;
   border: none;
-  color: #64748b;
+  color: #505068;
   font-size: 0.85rem;
   font-weight: 600;
   padding: 8px 14px;
@@ -736,13 +737,13 @@ select option { background: #0d1621 }
   margin-bottom: -1px;
 }
 
-.admin-sub-tabs button:hover { color: #e2e8f0 }
-.admin-sub-tabs button.active { color: #e2e8f0; border-bottom-color: #ff4655 }
+.admin-sub-tabs button:hover { color: #e8e8f0 }
+.admin-sub-tabs button.active { color: #e8e8f0; border-bottom-color: #ff4655 }
 
 .game-admin-card {
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 10px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 12px;
   padding: 12px 16px;
   margin-bottom: 8px;
 }
@@ -755,7 +756,7 @@ select option { background: #0d1621 }
   flex-wrap: wrap;
 }
 
-.game-date { color: #334155 }
+.game-date { color: #303048 }
 
 /* ── Players ── */
 .add-player-form { display: flex; gap: 10px; margin-bottom: 16px }
@@ -763,9 +764,9 @@ select option { background: #0d1621 }
 .add-player-form button {
   padding: 11px 18px;
   background: linear-gradient(135deg, #39d98a, #22c55e);
-  color: #080b10;
+  color: #000000;
   border: none;
-  border-radius: 9px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
   font-size: 0.88rem;
@@ -777,9 +778,9 @@ select option { background: #0d1621 }
   justify-content: space-between;
   align-items: center;
   padding: 13px 16px;
-  background: #0d1621;
-  border: 1px solid #1a2535;
-  border-radius: 10px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 12px;
   margin-bottom: 8px;
   gap: 10px;
 }
@@ -789,10 +790,10 @@ select option { background: #0d1621 }
 .edit-name-input {
   flex: 1;
   padding: 7px 10px;
-  background: #111c2a;
+  background: #16161f;
   border: 1px solid #39d98a44;
-  border-radius: 7px;
-  color: #e2e8f0;
+  border-radius: 8px;
+  color: #e8e8f0;
   font-size: 0.92rem;
 }
 
@@ -802,9 +803,9 @@ select option { background: #0d1621 }
 .pw-form button {
   padding: 11px 18px;
   background: linear-gradient(135deg, #39d98a, #22c55e);
-  color: #080b10;
+  color: #000000;
   border: none;
-  border-radius: 9px;
+  border-radius: 10px;
   cursor: pointer;
   font-weight: 700;
 }
@@ -841,13 +842,13 @@ select option { background: #0d1621 }
 .bet-vs-text {
   font-size: 0.68rem;
   font-weight: 800;
-  color: #1e2d3d;
+  color: #252535;
   letter-spacing: 2px;
 }
 
 .bet-stake-label {
   font-size: 0.6rem;
-  color: #243447;
+  color: #1e1e2c;
   text-transform: uppercase;
   letter-spacing: 0.8px;
   font-weight: 700;
@@ -856,13 +857,13 @@ select option { background: #0d1621 }
 .bet-stake-val {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #475569;
+  color: #404058;
 }
 
 .bet-player-name {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #475569;
+  color: #404058;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -870,12 +871,10 @@ select option { background: #0d1621 }
 .bet-team {
   font-size: 1.05rem;
   font-weight: 800;
-  color: #e2e8f0;
+  color: #e8e8f0;
 }
 
-.bet-team.own {
-  color: #39d98a;
-}
+.bet-team.own { color: #39d98a }
 
 .bet-potential {
   font-size: 0.88rem;
@@ -884,7 +883,7 @@ select option { background: #0d1621 }
 
 .bet-odds-label {
   font-size: 0.68rem;
-  color: #334155;
+  color: #303048;
 }
 
 /* ── Notification dot ── */
@@ -906,15 +905,13 @@ select option { background: #0d1621 }
 /* ── Listing meta ── */
 .listing-time {
   font-weight: 400;
-  color: #1e2d3d;
+  color: #252535;
   letter-spacing: 0;
   text-transform: none;
 }
 
 /* ── History filter ── */
-.history-filters {
-  margin-bottom: 14px;
-}
+.history-filters { margin-bottom: 14px }
 
 .history-filters select {
   width: auto;
@@ -924,18 +921,10 @@ select option { background: #0d1621 }
 }
 
 /* ── Leaderboard clickable ── */
-.player-card.clickable {
-  cursor: pointer;
-}
+.player-card.clickable { cursor: pointer }
+.player-card.clickable:hover { border-color: #39d98a33 }
 
-.player-card.clickable:hover {
-  border-color: #39d98a33;
-}
-
-.pnl-tag {
-  font-size: 0.78rem;
-  font-weight: 700;
-}
+.pnl-tag { font-size: 0.78rem; font-weight: 700 }
 
 /* ── Player detail row ── */
 .player-detail-row {
@@ -949,7 +938,7 @@ select option { background: #0d1621 }
 h2 {
   font-size: 0.72rem;
   font-weight: 700;
-  color: #243447;
+  color: #252535;
   text-transform: uppercase;
   letter-spacing: 1.5px;
   margin-bottom: 14px;
@@ -958,15 +947,90 @@ h2 {
 .success-msg {
   color: #39d98a;
   font-size: 0.85rem;
-  background: #0d1f18;
+  background: #0d1812;
   border: 1px solid #39d98a33;
   border-radius: 8px;
   padding: 9px 13px;
 }
 
 .empty {
-  color: #1e2d3d;
+  color: #252535;
   font-size: 0.88rem;
   text-align: center;
   padding: 36px 0;
+}
+
+/* ── History card ── */
+.history-card { border-color: #1d1d27 }
+.history-card:hover { border-color: #2d2d3f }
+
+.history-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.history-side {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.history-side.right {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.history-result-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.history-result-label.won { color: #39d98a }
+.history-result-label.lost { color: #ff4655 }
+
+.history-player {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #f0f0f8;
+  line-height: 1.1;
+}
+
+.history-team-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #8888a0;
+}
+
+.history-team-name.win { color: #39d98a }
+.history-team-name.lose { color: #505068 }
+
+.history-amount {
+  font-size: 1.4rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.history-divider {
+  font-size: 0.65rem;
+  font-weight: 800;
+  color: #1e1e2c;
+  letter-spacing: 2px;
+  flex-shrink: 0;
+  padding: 0 4px;
+}
+
+.history-meta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: #3a3a50;
+  padding-top: 12px;
+  border-top: 1px solid #1a1a24;
 }

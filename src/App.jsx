@@ -988,31 +988,36 @@ function History({ bets, players, undoBet, isAdmin }) {
       {filtered.map(bet => {
         const winnerName = name(bet.winnerId)
         const winnerTeam = bet.winnerId === bet.player1Id ? bet.team1 : bet.team2
+        const loserId = bet.winnerId === bet.player1Id ? bet.player2Id : bet.player1Id
+        const loserName = name(loserId)
+        const loserTeam = bet.winnerId === bet.player1Id ? bet.team2 : bet.team1
+        const winnerOdds = bet.winnerId === bet.player1Id ? bet.player1Odds : bet.player2Odds
+        const loserOdds = bet.winnerId === bet.player1Id ? bet.player2Odds : bet.player1Odds
         return (
-          <div key={bet.id} className="bet-card settled">
-            <div className="bet-versus">
-              <div className="bet-player-side">
-                <span className="bet-player-name">{name(bet.player1Id)}</span>
-                <span className={`bet-team ${bet.winnerId === bet.player1Id ? 'own' : ''}`}>{bet.team1}</span>
-                <span className="bet-odds-label">odds {bet.player1Odds}</span>
+          <div key={bet.id} className="bet-card history-card">
+            <div className="history-result">
+              <div className="history-side">
+                <span className="history-result-label won">Won</span>
+                <span className="history-player">{winnerName}</span>
+                <span className="history-team-name win">{winnerTeam}</span>
+                <span className="history-amount up">+{fmt(bet.payout)}</span>
               </div>
-              <div className="bet-vs-center">
-                <span className="bet-vs-text">VS</span>
-                <span className="bet-stake-label">stake</span>
-                <span className="bet-stake-val">{fmt(bet.stake)}</span>
-              </div>
-              <div className="bet-player-side right">
-                <span className="bet-player-name">{name(bet.player2Id)}</span>
-                <span className={`bet-team ${bet.winnerId === bet.player2Id ? 'own' : ''}`}>{bet.team2}</span>
-                <span className="bet-odds-label">odds {bet.player2Odds}</span>
+              <div className="history-divider">VS</div>
+              <div className="history-side right">
+                <span className="history-result-label lost">Lost</span>
+                <span className="history-player">{loserName}</span>
+                <span className="history-team-name lose">{loserTeam}</span>
+                <span className="history-amount down">-{fmt(bet.payout)}</span>
               </div>
             </div>
-            <div className="bet-info">
-              <span className="winner">{winnerName} ({winnerTeam}) won {fmt(bet.payout)}</span>
-              {bet.matchDate && <span> · match {bet.matchDate}</span>}
+            <div className="history-meta">
+              <span>Odds {winnerOdds} / {loserOdds}</span>
+              <span>·</span>
+              <span>Stake {fmt(bet.stake)}</span>
+              {bet.matchDate && <><span>·</span><span>{bet.matchDate}</span></>}
             </div>
             {isAdmin && (
-              <div className="bet-actions">
+              <div className="bet-actions" style={{ marginTop: 10 }}>
                 <button className={`undo-btn ${confirming === bet.id ? 'confirming' : ''}`} onClick={() => handleUndo(bet)}>
                   {confirming === bet.id ? 'Confirm undo?' : 'Undo'}
                 </button>
