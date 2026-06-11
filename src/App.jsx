@@ -949,6 +949,7 @@ function BalanceChart({ bets, playerId }) {
 function Leaderboard({ players, avail, settledBets, activeBets }) {
   const [selectedId, setSelectedId] = useState(null)
   const [showHistory, setShowHistory] = useState(false)
+  const [historyView, setHistoryView] = useState('bets')
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const sorted = [...players].sort((a, b) => b.balance - a.balance)
 
@@ -1009,23 +1010,59 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
               <span>Bet History ({mySettled.length})</span>
               <span className="toggle-arrow">{showHistory ? '▲' : '▼'}</span>
             </button>
-            {showHistory && mySettled.map(bet => {
-              const won = bet.winnerId === selectedId
-              const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
-              const oppName = name(bet.player1Id === selectedId ? bet.player2Id : bet.player1Id)
-              return (
-                <div key={bet.id} className="bet-card settled">
-                  <div className="player-detail-row">
-                    <span className={`bet-team ${won ? 'own' : ''}`}>{myTeam}</span>
-                    <span className="vs">vs</span>
-                    <span className="taker-player">{oppName}</span>
-                    <span className={`bet-potential ${won ? 'up' : 'down'}`} style={{ marginLeft: 'auto' }}>
-                      {won ? '+' : '-'}{fmt(bet.payout)}
-                    </span>
-                  </div>
+            {showHistory && (
+              <>
+                <div className="history-sub-tabs">
+                  <button className={historyView === 'bets' ? 'active' : ''} onClick={() => setHistoryView('bets')}>Individual Bets</button>
+                  <button className={historyView === 'players' ? 'active' : ''} onClick={() => setHistoryView('players')}>vs Players</button>
                 </div>
-              )
-            })}
+
+                {historyView === 'bets' && mySettled.map(bet => {
+                  const won = bet.winnerId === selectedId
+                  const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
+                  const oppName = name(bet.player1Id === selectedId ? bet.player2Id : bet.player1Id)
+                  return (
+                    <div key={bet.id} className="bet-card settled">
+                      <div className="player-detail-row">
+                        <span className={`bet-team ${won ? 'own' : ''}`}>{myTeam}</span>
+                        <span className="vs">vs</span>
+                        <span className="taker-player">{oppName}</span>
+                        <span className={`bet-potential ${won ? 'up' : 'down'}`} style={{ marginLeft: 'auto' }}>
+                          {won ? '+' : '-'}{fmt(bet.payout)}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+
+                {historyView === 'players' && (() => {
+                  const vsMap = {}
+                  mySettled.forEach(bet => {
+                    const oppId = bet.player1Id === selectedId ? bet.player2Id : bet.player1Id
+                    const won = bet.winnerId === selectedId
+                    if (!vsMap[oppId]) vsMap[oppId] = { oppName: name(oppId), pnl: 0, wins: 0, losses: 0 }
+                    vsMap[oppId].pnl = parseFloat((vsMap[oppId].pnl + (won ? bet.payout : -bet.payout)).toFixed(2))
+                    if (won) vsMap[oppId].wins++
+                    else vsMap[oppId].losses++
+                  })
+                  return Object.values(vsMap)
+                    .sort((a, b) => b.pnl - a.pnl)
+                    .map((opp, i) => (
+                      <div key={i} className="bet-card vs-player-card">
+                        <div className="vs-player-row">
+                          <span className="vs-player-name">{opp.oppName}</span>
+                          <div className="vs-player-stats">
+                            <span className={`vs-pnl ${opp.pnl > 0 ? 'up' : opp.pnl < 0 ? 'down' : 'neutral'}`}>
+                              {opp.pnl > 0 ? '+' : ''}{fmt(opp.pnl)}
+                            </span>
+                            <span className="vs-record">{opp.wins}W / {opp.losses}L</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                })()}
+              </>
+            )}
           </>
         )}
 
@@ -1044,7 +1081,7 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
         const barFill = isBase ? 60 : Math.min(Math.abs(pnl) / 50 * 60, 60)
         const barColor = isBase ? '#44445e' : pnl > 0 ? '#39d98a' : '#ff4655'
         return (
-          <div key={p.id} className="player-card clickable" onClick={() => { setSelectedId(p.id); setShowHistory(false) }}>
+          <div key={p.id} className="player-card clickable" onClick={() => { setSelectedId(p.id); setShowHistory(false); setHistoryView('bets') }}>
             <span className="rank">#{i + 1}</span>
             <span className="name">{p.username}</span>
             <div className="stats">

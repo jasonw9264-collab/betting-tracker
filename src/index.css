@@ -1094,3 +1094,52 @@ h2 {
 }
 
 .history-toggle-btn:hover { border-color: #2d2d3f; color: #b0b0c0 }
+
+/* ── History sub-tabs ── */
+.history-sub-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #1d1d27;
+  margin-bottom: 10px;
+}
+
+.history-sub-tabs button {
+  background: none;
+  border: none;
+  color: #505068;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 7px 12px;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  margin-bottom: -1px;
+}
+
+.history-sub-tabs button:hover { color: #8888a0 }
+.history-sub-tabs button.active { color: #e8e8f0; border-bottom-color: #39d98a }
+
+/* ── vs Player card ── */
+.vs-player-card { border-color: #1d1d27 }
+
+.vs-player-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.vs-player-name {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e8e8f0;
+}
+
+.vs-player-stats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.vs-pnl { font-size: 1.15rem; font-weight: 800 }
+.vs-record { font-size: 0.75rem; color: #505068; font-weight: 600 }
