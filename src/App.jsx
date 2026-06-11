@@ -856,10 +856,99 @@ function ActiveBets({ bets, players, settleBet, cancelBet, isAdmin }) {
   )
 }
 
+// ── Balance Chart ─────────────────────────────────────────────────────────────
+
+function BalanceChart({ bets, playerId }) {
+  const [tooltip, setTooltip] = useState(null)
+
+  const sorted = [...bets].sort((a, b) =>
+    (a.settledAt?.toMillis?.() ?? 0) - (b.settledAt?.toMillis?.() ?? 0)
+  )
+
+  const points = [{ balance: 50, won: null, bet: null }]
+  let bal = 50
+  sorted.forEach(bet => {
+    const won = bet.winnerId === playerId
+    bal = parseFloat((won ? bal + bet.payout : bal - bet.payout).toFixed(2))
+    points.push({ balance: bal, won, bet })
+  })
+
+  if (points.length < 2) return null
+
+  const W = 560, H = 120
+  const PL = 10, PR = 10, PT = 14, PB = 14
+
+  const bals = points.map(p => p.balance)
+  const minB = Math.min(...bals, 50) - 3
+  const maxB = Math.max(...bals, 50) + 3
+  const rangeB = maxB - minB
+
+  const xp = i => PL + (i / (points.length - 1)) * (W - PL - PR)
+  const yp = b => PT + (1 - (b - minB) / rangeB) * (H - PT - PB)
+
+  const linePath = points.map((p, i) =>
+    `${i === 0 ? 'M' : 'L'}${xp(i).toFixed(1)},${yp(p.balance).toFixed(1)}`
+  ).join(' ')
+  const fillPath = `${linePath} L${xp(points.length - 1).toFixed(1)},${H} L${PL},${H} Z`
+  const baseY = yp(50).toFixed(1)
+
+  return (
+    <div className="balance-chart-wrap" onMouseLeave={() => setTooltip(null)}>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" height={H} preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#39d98a" stopOpacity="0.18" />
+            <stop offset="100%" stopColor="#39d98a" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <line x1={PL} y1={baseY} x2={W - PR} y2={baseY}
+          stroke="#252535" strokeWidth="1" strokeDasharray="4 3" />
+        <path d={fillPath} fill="url(#chartFill)" />
+        <path d={linePath} fill="none" stroke="#39d98a" strokeWidth="1.5" strokeLinejoin="round" />
+        {points.map((p, i) => (
+          <circle
+            key={i}
+            cx={xp(i)}
+            cy={yp(p.balance)}
+            r={5}
+            fill={i === 0 ? '#2a2a3e' : p.won ? '#39d98a' : '#ff4655'}
+            stroke="#111117"
+            strokeWidth="1.5"
+            style={{ cursor: p.bet ? 'pointer' : 'default' }}
+            onMouseEnter={e => {
+              if (!p.bet) return
+              const wrap = e.currentTarget.closest('.balance-chart-wrap')
+              const rect = wrap.getBoundingClientRect()
+              setTooltip({ p, x: e.clientX - rect.left, y: e.clientY - rect.top })
+            }}
+          />
+        ))}
+      </svg>
+      {tooltip && (() => {
+        const bet = tooltip.p.bet
+        const won = tooltip.p.won
+        const myOdds = won
+          ? (bet.winnerId === bet.player1Id ? bet.player1Odds : bet.player2Odds)
+          : (bet.winnerId === bet.player1Id ? bet.player2Odds : bet.player1Odds)
+        return (
+          <div className="chart-tooltip" style={{ left: tooltip.x, top: tooltip.y }}>
+            <span className="chart-tt-game">{bet.team1} vs {bet.team2}</span>
+            <span className={`chart-tt-amount ${won ? 'up' : 'down'}`}>
+              {won ? '+' : '-'}{fmt(bet.payout)}
+            </span>
+            <span className="chart-tt-odds">odds {myOdds}</span>
+          </div>
+        )
+      })()}
+    </div>
+  )
+}
+
 // ── Leaderboard ───────────────────────────────────────────────────────────────
 
 function Leaderboard({ players, avail, settledBets, activeBets }) {
   const [selectedId, setSelectedId] = useState(null)
+  const [showHistory, setShowHistory] = useState(false)
   const name = (id) => players.find(p => p.id === id)?.username ?? '?'
   const sorted = [...players].sort((a, b) => b.balance - a.balance)
 
@@ -869,6 +958,7 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
     const myActive = activeBets.filter(b => b.player1Id === selectedId || b.player2Id === selectedId)
     const mySettled = settledBets.filter(b => b.player1Id === selectedId || b.player2Id === selectedId)
     const pnl = p.balance - 50
+    const isBase = Math.abs(pnl) < 0.001
     return (
       <section>
         <button className="back-btn" onClick={() => setSelectedId(null)}>← Leaderboard</button>
@@ -876,20 +966,23 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
         <div className="profile-stats">
           <div className="profile-stat">
             <span className="profile-stat-label">Balance</span>
-            <span className={`profile-stat-value ${p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
+            <span className={`profile-stat-value ${isBase ? 'neutral' : p.balance >= 50 ? 'up' : 'down'}`}>{fmt(p.balance)}</span>
           </div>
           <div className="profile-stat">
             <span className="profile-stat-label">P&L</span>
-            <span className={`profile-stat-value ${pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
+            <span className={`profile-stat-value ${isBase ? 'neutral' : pnl >= 0 ? 'up' : 'down'}`}>{pnl >= 0 ? '+' : ''}{fmt(pnl)}</span>
           </div>
           <div className="profile-stat">
             <span className="profile-stat-label">Record</span>
             <span className="profile-stat-value">{p.wins || 0}W / {p.losses || 0}L</span>
           </div>
         </div>
+
+        {mySettled.length > 0 && <BalanceChart bets={mySettled} playerId={selectedId} />}
+
         {myActive.length > 0 && (
           <>
-            <h2 style={{ marginTop: 20 }}>Active Bets</h2>
+            <h2 style={{ marginTop: 4 }}>Active Bets</h2>
             {myActive.map(bet => {
               const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
               const theirTeam = bet.player1Id === selectedId ? bet.team2 : bet.team1
@@ -909,10 +1002,14 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
             })}
           </>
         )}
+
         {mySettled.length > 0 && (
           <>
-            <h2 style={{ marginTop: 20 }}>Bet History</h2>
-            {mySettled.map(bet => {
+            <button className="history-toggle-btn" onClick={() => setShowHistory(v => !v)}>
+              <span>Bet History ({mySettled.length})</span>
+              <span className="toggle-arrow">{showHistory ? '▲' : '▼'}</span>
+            </button>
+            {showHistory && mySettled.map(bet => {
               const won = bet.winnerId === selectedId
               const myTeam = bet.player1Id === selectedId ? bet.team1 : bet.team2
               const oppName = name(bet.player1Id === selectedId ? bet.player2Id : bet.player1Id)
@@ -931,6 +1028,7 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
             })}
           </>
         )}
+
         {mySettled.length === 0 && myActive.length === 0 && <p className="empty">No bets yet.</p>}
       </section>
     )
@@ -946,7 +1044,7 @@ function Leaderboard({ players, avail, settledBets, activeBets }) {
         const barFill = isBase ? 60 : Math.min(Math.abs(pnl) / 50 * 60, 60)
         const barColor = isBase ? '#44445e' : pnl > 0 ? '#39d98a' : '#ff4655'
         return (
-          <div key={p.id} className="player-card clickable" onClick={() => setSelectedId(p.id)}>
+          <div key={p.id} className="player-card clickable" onClick={() => { setSelectedId(p.id); setShowHistory(false) }}>
             <span className="rank">#{i + 1}</span>
             <span className="name">{p.username}</span>
             <div className="stats">

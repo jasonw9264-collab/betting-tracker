@@ -1043,3 +1043,54 @@ h2 {
   padding-top: 12px;
   border-top: 1px solid #1a1a24;
 }
+
+/* ── Balance chart ── */
+.balance-chart-wrap {
+  position: relative;
+  background: #0a0a10;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
+  padding: 12px 6px 8px;
+  margin-bottom: 20px;
+  overflow: visible;
+}
+
+.chart-tooltip {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 14px));
+  background: #18181f;
+  border: 1px solid #2d2d3f;
+  border-radius: 10px;
+  padding: 9px 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 20;
+  white-space: nowrap;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.7);
+}
+
+.chart-tt-game { font-size: 0.75rem; color: #8888a0; font-weight: 600 }
+.chart-tt-amount { font-size: 1rem; font-weight: 800 }
+.chart-tt-odds { font-size: 0.68rem; color: #44445e }
+
+/* ── History toggle ── */
+.history-toggle-btn {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 18px;
+  background: #111117;
+  border: 1px solid #1d1d27;
+  border-radius: 14px;
+  color: #8888a0;
+  cursor: pointer;
+  font-size: 0.88rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  transition: all 0.15s;
+}
+
+.history-toggle-btn:hover { border-color: #2d2d3f; color: #b0b0c0 }
