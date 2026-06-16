@@ -42,6 +42,13 @@ function today() {
   return new Date().toISOString().split('T')[0]
 }
 
+// A listing/bet is expired once it's 8am local time on its match day (or later).
+function isPastCutoff(matchDate) {
+  if (!matchDate) return false
+  const cutoff = new Date(`${matchDate}T08:00:00`)
+  return Date.now() >= cutoff.getTime()
+}
+
 function timeAgo(ts) {
   if (!ts?.toMillis) return ''
   const s = Math.floor((Date.now() - ts.toMillis()) / 1000)
@@ -217,6 +224,20 @@ export default function App() {
     )
     return () => { u1(); u2(); u3(); u4() }
   }, [])
+
+  // Auto-delete open market listings once their match has started (8am on match day).
+  useEffect(() => {
+    function cleanupExpiredListings() {
+      listings.forEach(l => {
+        if (l.status === 'open' && isPastCutoff(l.matchDate)) {
+          deleteDoc(doc(db, 'listings', l.id)).catch(() => {})
+        }
+      })
+    }
+    cleanupExpiredListings()
+    const interval = setInterval(cleanupExpiredListings, 60000)
+    return () => clearInterval(interval)
+  }, [listings])
 
   function login(playerId, username) {
     const s = { playerId, username }
